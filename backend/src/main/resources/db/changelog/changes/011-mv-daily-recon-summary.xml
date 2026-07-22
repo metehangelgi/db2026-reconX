@@ -1,0 +1,5 @@
+<changeSet id="011-mv-daily-recon-summary" author="jo">
+    <sql>
+        REFRESH MATERIALIZED VIEW CONCURRENTLY mv_daily_recon_summary;
+    </sql>
+</changeSet>
