@@ -18,21 +18,6 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
 
-    <!-- ADV006 — counterparties -->
-    <changeSet id="002-create-counterparties" author="trainer">
-        <createTable tableName="counterparties">
-            <column name="id" type="BIGINT" autoIncrement="true">
-                <constraints primaryKey="true"/>
-            </column>
-            <column name="name" type="VARCHAR(100)"><constraints nullable="false"/></column>
-            <column name="lei_code" type="VARCHAR(20)"><constraints nullable="false" unique="true"/></column>
-            <column name="region" type="VARCHAR(10)"><constraints nullable="false"/></column>
-            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
-        </createTable>
-        <rollback>
-            <dropTable tableName="counterparties"/>
-        </rollback>
-    </changeSet>
 
     <!-- ADV006 — instruments -->
     <changeSet id="002-create-instruments" author="trainer">
@@ -105,5 +90,11 @@
             <dropTable tableName="settlements"/>
         </rollback>
     </changeSet>
+
+    <changeSet id="002-tag-day1-complete" author="trainer">
+        <tagDatabase tag="day1-complete"/>
+        <rollback>
+        </rollback>
+    </changeset>
 
 </databaseChangeLog>
