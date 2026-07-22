@@ -1,14 +1,18 @@
 # TICKET-ADV006 — ER model (8 entities)
 
 ```mermaid
+---
+title: Entity-relationship Diagram
+---
 erDiagram
+direction LR
     COUNTERPARTIES ||--o{ TRADES : "executes"
     INSTRUMENTS    ||--o{ TRADES : "covers"
     TRADES         ||--o{ SETTLEMENTS : "settles via"
     TRADES         ||--o{ RECON_BREAKS : "may produce"
     RECON_JOBS     ||--o{ RECON_BREAKS : "detected by"
-    USERS          ||--o{ AUDIT_LOG : "actor"
-    TRADES         ||--o{ AUDIT_LOG : "audited"
+    USERS          ||--o{ RECON_JOBS : "trigger"
+    AUDIT_LOG      ||--o{ USERS : "reference"
 
     COUNTERPARTIES {
         bigint id PK
@@ -25,6 +29,15 @@ erDiagram
         char currency
         char isin UK
         jsonb metadata "ADV009"
+    }
+
+    USERS {
+        bigint id PK
+        varchar email UK
+        varchar password_hash
+        varchar role
+        boolean enabled
+        timestamp created_at
     }
 
     TRADES {
@@ -79,17 +92,8 @@ erDiagram
         varchar trade_ref
         varchar event_type
         timestamp event_timestamp
-        varchar actor
+        varchar actor "REF to USERS(email)"
         clob before_state
         clob after_state
-    }
-
-    USERS {
-        bigint id PK
-        varchar email UK
-        varchar password_hash
-        varchar role
-        boolean enabled
-        timestamp created_at
     }
 ```
