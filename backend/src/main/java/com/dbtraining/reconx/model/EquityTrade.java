@@ -54,7 +54,8 @@ public final class EquityTrade implements TradeType {
     /** Notional = quantity * price in the trade currency. */
     @Override public Money notional() {
         // TODO(TICKET-ADV019): return new Money(quantity * price, currency).
-        throw new UnsupportedOperationException("TICKET-ADV019");
+        BigDecimal notionalAmount = quantity.multiply(price);
+        return new Money(notionalAmount, currency);
     }
 
     public String instrumentSymbol() { return instrumentSymbol; }
