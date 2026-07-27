@@ -45,6 +45,21 @@ class BondTradeTest {
         );
     }
 
+    @Test
+    void shouldRejectIsinWithWrongLength() {
+        IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
+                () -> validBuilder()
+                        .isin("SHORT")
+                        .build()
+        );
+
+        assertEquals(
+                "ISIN must be exactly 12 characters",
+                exception.getMessage()
+        );
+    }
+
     private BondTrade.Builder validBuilder() {
         return BondTrade.builder()
                 .tradeRef(TradeRef.of("BND-20260727-0001"))
