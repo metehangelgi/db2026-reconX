@@ -110,7 +110,22 @@ public final class EquityTrade implements TradeType {
             //     quantity, price, currency, side, tradeDate).
             //   - quantity and price must be > 0 (IllegalStateException otherwise).
             //   - return new EquityTrade(this).
-            throw new UnsupportedOperationException("TICKET-ADV019");
+            Objects.requireNonNull(tradeRef, "tradeRef is required");
+            Objects.requireNonNull(instrumentSymbol, "instrumentSymbol is required");
+            Objects.requireNonNull(quantity, "quantity is required");
+            Objects.requireNonNull(price, "price is required");
+            Objects.requireNonNull(currency, "currency is required");
+            Objects.requireNonNull(side, "side is required");
+            Objects.requireNonNull(tradeDate, "tradeDate is required");
+
+            if (quantity.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalStateException("quantity must be > 0");
+            }
+            if (price.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalStateException("price must be > 0");
+            }
+
+            return new EquityTrade(this);
         }
     }
 }
