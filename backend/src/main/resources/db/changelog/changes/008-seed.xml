@@ -74,4 +74,28 @@
         </rollback>
     </changeSet>
 
+    <changeSet id="008-seed-data" author="reconx-team" context="dev,test">
+        <preConditions onFail="MARK_RAN">
+            <dbms type="postgresql"/>
+            <sqlCheck expectedResult="0">
+                SELECT
+                    (SELECT COUNT(*) FROM counterparties)
+                  + (SELECT COUNT(*) FROM instruments)
+                  + (SELECT COUNT(*) FROM trades)
+            </sqlCheck>
+        </preConditions>
+        <sqlFile
+                path="data/seed_data.sql"
+                relativeToChangelogFile="true"
+                splitStatements="true"
+                endDelimiter=";"/>
+        <rollback>
+            <sql>
+                DELETE FROM trades;
+                DELETE FROM instruments;
+                DELETE FROM counterparties;
+            </sql>
+        </rollback>
+    </changeSet>
+
 </databaseChangeLog>
