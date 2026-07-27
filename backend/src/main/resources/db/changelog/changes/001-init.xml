@@ -19,6 +19,8 @@
 
     <changeSet id="001-init-tag" author="trainer">
         <tagDatabase tag="v1.0.0-init"/>
+        <rollback>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

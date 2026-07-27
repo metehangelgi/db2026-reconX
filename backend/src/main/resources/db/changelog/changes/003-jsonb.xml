@@ -30,4 +30,10 @@
         </rollback>
     </changeSet>
 
+    <changeSet id="002-tag-day1-complete" author="Jo">
+        <tagDatabase tag="day1-complete"/>
+        <rollback>
+        </rollback>
+    </changeSet>
+    
 </databaseChangeLog>

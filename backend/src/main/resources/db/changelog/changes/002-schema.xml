@@ -91,10 +91,10 @@
         </rollback>
     </changeSet>
 
-    <changeSet id="002-tag-day1-complete" author="trainer">
+    <changeSet id="002-tag-day1-complete" author="Jo">
         <tagDatabase tag="day1-complete"/>
         <rollback>
         </rollback>
-    </changeset>
+    </changeSet>
 
 </databaseChangeLog>
