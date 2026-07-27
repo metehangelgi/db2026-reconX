@@ -93,6 +93,6 @@
 
     <changeSet id="002-tag-day1-complete" author="trainer">
         <tagDatabase tag="day1-complete"/>
-    </changeset>
+    </changeSet>
 
 </databaseChangeLog>
