@@ -75,9 +75,11 @@ public final class EquityTrade implements TradeType {
 
     @Override
     public String toString() {
-        // TODO(TICKET-ADV030): "EquityTrade[ref=..., symbol=..., qty=..., price=... CCY, side=...]"
-        //                     — must NOT leak counterparty PII.
-        throw new UnsupportedOperationException("TICKET-ADV030");
+        // NOTE: counterpartyId is deliberately omitted — it is the PII line in
+        // this codebase and must never reach plain-text logs.
+        return "EquityTrade[ref=%s, symbol=%s, qty=%s, price=%s %s, side=%s]"
+                .formatted(tradeRef, instrumentSymbol, quantity.toPlainString(),
+                        price.toPlainString(), currency.getCurrencyCode(), side);
     }
 
     /** Fluent builder. Required fields validated in {@link #build()}. */
