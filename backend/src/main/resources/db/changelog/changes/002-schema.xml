@@ -60,7 +60,7 @@
                                  referencedTableName="instruments" referencedColumnNames="id"/>
         <addForeignKeyConstraint baseTableName="trades" baseColumnNames="counterparty_id"
                                  constraintName="fk_trades_counterparty"
-                                 referencedTableName="counterparty" referencedColumnNames="id"/>
+                                 referencedTableName="counterparties" referencedColumnNames="id"/>
         <createIndex tableName="trades" indexName="idx_trades_trade_date">
             <column name="trade_date"/>
         </createIndex>
