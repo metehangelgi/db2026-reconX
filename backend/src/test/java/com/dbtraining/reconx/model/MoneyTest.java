@@ -25,13 +25,11 @@ class MoneyTest {
         assertThat(money3.amount()).isEqualByComparingTo(new BigDecimal("150"));
     }
 
-        @Test
+    @Test
     void money_currencyMismatch() {
         Money money1 = new Money(new BigDecimal("100"), Currency.getInstance("USD"));
-        Money money2 = new Money(new BigDecimal("100"), Currency.getInstance("EUR"));
-        assertThat(money1).isEqualTo(money2); 
+        Money money2 = new Money(new BigDecimal("50"), Currency.getInstance("EUR"));
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> money1.plus(money2));
     }
-
-
 
 }
