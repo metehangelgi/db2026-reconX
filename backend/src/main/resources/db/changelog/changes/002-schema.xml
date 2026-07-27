@@ -60,7 +60,7 @@
                                  referencedTableName="instruments" referencedColumnNames="id"/>
         <addForeignKeyConstraint baseTableName="trades" baseColumnNames="counterparty_id"
                                  constraintName="fk_trades_counterparty"
-                                 referencedTableName="counterparties" referencedColumnNames="id"/>
+                                 referencedTableName="counterparty" referencedColumnNames="id"/>
         <createIndex tableName="trades" indexName="idx_trades_trade_date">
             <column name="trade_date"/>
         </createIndex>
@@ -90,5 +90,9 @@
             <dropTable tableName="settlements"/>
         </rollback>
     </changeSet>
+
+    <changeSet id="002-tag-day1-complete" author="trainer">
+        <tagDatabase tag="day1-complete"/>
+    </changeset>
 
 </databaseChangeLog>
