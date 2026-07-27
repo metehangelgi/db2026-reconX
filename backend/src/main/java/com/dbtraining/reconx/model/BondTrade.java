@@ -65,8 +65,12 @@ public final class BondTrade implements TradeType {
     @Override public int hashCode() { return tradeRef.hashCode(); }
 
     @Override public String toString() {
-        // TODO(TICKET-ADV030): "BondTrade[ref=..., isin=..., face=... CCY, coupon=..., maturity=..., side=...]"
-        throw new UnsupportedOperationException("TICKET-ADV030");
+        // NOTE: counterpartyId is deliberately omitted — it is the PII line in
+        // this codebase and must never reach plain-text logs.
+        return "BondTrade[ref=%s, isin=%s, face=%s %s, coupon=%s, maturity=%s, side=%s]"
+                .formatted(tradeRef, isin, faceValue.toPlainString(),
+                        currency.getCurrencyCode(), couponRate.toPlainString(),
+                        maturityDate, side);
     }
 
     public static final class Builder {
