@@ -1,6 +1,9 @@
 package com.dbtraining.reconx.service;
 
+import com.dbtraining.reconx.model.BondTrade;
+import com.dbtraining.reconx.model.DerivativeTrade;
 import com.dbtraining.reconx.model.EquityTrade;
+import com.dbtraining.reconx.model.FXTrade;
 import com.dbtraining.reconx.model.TradeType;
 import org.springframework.stereotype.Service;
 
@@ -71,9 +74,12 @@ public class TradeAnalyticsService {
     }
 
     private long counterpartyIdOf(TradeType t) {
-        // TODO(TICKET-ADV018): exhaustive switch over the sealed TradeType
-        //   hierarchy returning t.counterpartyId() for each concrete subtype.
-        throw new UnsupportedOperationException("TICKET-ADV018");
+        return switch (t) {
+            case EquityTrade equity -> equity.counterpartyId();
+            case FXTrade fx -> fx.counterpartyId();
+            case BondTrade bond -> bond.counterpartyId();
+            case DerivativeTrade derivative -> derivative.counterpartyId();
+        };
     }
 
     public record NotionalSummary(long count, BigDecimal total) {}
