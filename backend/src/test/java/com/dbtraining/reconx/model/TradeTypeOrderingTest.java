@@ -26,8 +26,8 @@ class TradeTypeOrderingTest {
         assertThat(trades)
                 .containsExactly(newest, derivative, middle, oldest);
 
-        assertThat(newest.compareTo(derivative)).isGreaterThan(0);
-        assertThat(derivative.compareTo(newest)).isLessThan(0);
+        assertThat(newest.compareTo(derivative)).isLessThan(0);
+        assertThat(derivative.compareTo(newest)).isGreaterThan(0);
         assertThat(newest.compareTo(newest)).isZero();
     }
 
