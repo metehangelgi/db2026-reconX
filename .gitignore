@@ -90,10 +90,3 @@ release.properties
 # Node/frontend build cache
 .npm
 .eslintcache
-
-# Changed files from this session (manual fixes)
-backend/src/main/resources/db/changelog/db.changelog-master.xml
-backend/src/main/resources/db/changelog/changes/002-create-counterparties.xml
-backend/src/main/resources/db/changelog/changes/002-schema.xml
-backend/src/main/resources/application-dev.yml
-./backend/src/main/java/com/dbtraining/reconx/security/SecurityConfig.java
