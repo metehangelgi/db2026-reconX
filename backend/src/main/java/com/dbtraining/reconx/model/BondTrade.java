@@ -101,8 +101,13 @@ public final class BondTrade implements TradeType {
             Objects.requireNonNull(currency,     "currency");
             Objects.requireNonNull(side,         "side");
             Objects.requireNonNull(tradeDate,    "tradeDate");
+
             if (maturityDate.isBefore(tradeDate))
                 throw new IllegalStateException("maturityDate cannot be before tradeDate");
+
+            if (isin == null || isin.length() != 12) {
+                throw new IllegalStateException("ISIN must be exactly 12 characters");
+            }
             return new BondTrade(this);
         }
     }
