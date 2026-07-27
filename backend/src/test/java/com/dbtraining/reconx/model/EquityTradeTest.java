@@ -47,9 +47,13 @@ class EquityTradeTest {
 
     @Test
     void equality_byTradeRef() {
-        // TODO(TICKET-ADV028): two EquityTrades with the same tradeRef are equal and share hashCode;
-        //                     a third with a different tradeRef is not equal.
-        //org.junit.jupiter.api.Assertions.fail("TICKET-ADV028 not implemented yet");
+        EquityTrade t1 = sampleEquity("ABC-20260727-1232");
+        EquityTrade t2 = sampleEquity("ABC-20260727-1232");
+        EquityTrade t3 = sampleEquity("ABC-20260727-9999");
+
+        assertThat(t1).isEqualTo(t2);
+        assertThat(t1.hashCode()).isEqualTo(t2.hashCode());
+        assertThat(t1).isNotEqualTo(t3);
     }
 
     private EquityTrade sampleEquity(String ref) {
