@@ -1,4 +1,11 @@
+/Users/metehangelgi/Desktop/reconX/ReconX/backend/src/test/java/com/dbtraining/reconx/dto/TradeRequestValidationTest.java
 /Users/metehangelgi/Desktop/reconX/ReconX/backend/src/test/java/com/dbtraining/reconx/exception/ReconExceptionTest.java
+/Users/metehangelgi/Desktop/reconX/ReconX/backend/src/test/java/com/dbtraining/reconx/model/BondTradeTest.java
 /Users/metehangelgi/Desktop/reconX/ReconX/backend/src/test/java/com/dbtraining/reconx/model/EquityTradeTest.java
+/Users/metehangelgi/Desktop/reconX/ReconX/backend/src/test/java/com/dbtraining/reconx/model/FXTradeTest.java
+/Users/metehangelgi/Desktop/reconX/ReconX/backend/src/test/java/com/dbtraining/reconx/model/MoneyTest.java
 /Users/metehangelgi/Desktop/reconX/ReconX/backend/src/test/java/com/dbtraining/reconx/model/ReconciliationRuleTest.java
+/Users/metehangelgi/Desktop/reconX/ReconX/backend/src/test/java/com/dbtraining/reconx/model/TradeRefTest.java
+/Users/metehangelgi/Desktop/reconX/ReconX/backend/src/test/java/com/dbtraining/reconx/model/TradeTypeOrderingTest.java
 /Users/metehangelgi/Desktop/reconX/ReconX/backend/src/test/java/com/dbtraining/reconx/service/ReconciliationEngineTest.java
+/Users/metehangelgi/Desktop/reconX/ReconX/backend/src/test/java/com/dbtraining/reconx/service/TradeAnalyticsServiceTest.java
