@@ -21,3 +21,4 @@
             <dropTable tableName="counterparties"/>
         </rollback>
     </changeSet>
+</databaseChangeLog>
