@@ -1,11 +1,10 @@
 package com.dbtraining.reconx.model;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 /**
  * ============================================================================
- * TICKET-ADV026 — ReconciliationRule enum with configurable thresholds
+ * ReconciliationRule enum with configurable thresholds
  *
  * WHAT:    Each enum value carries its own price tolerance (%) and quantity
  *          tolerance (absolute units). {@link #matches} returns true if the
@@ -43,19 +42,14 @@ public enum ReconciliationRule {
      */
     public boolean matches(BigDecimal internalPrice, BigDecimal internalQty,
                            BigDecimal externalPrice, BigDecimal externalQty) {
-        // TODO(TICKET-ADV026):
-        //   1. Compute |internalPrice - externalPrice| as priceDiff.
-        //   2. priceDiffPct = priceDiff / internalPrice (guard divide-by-zero).
-        //   3. qtyDiff = |internalQty - externalQty|.
-        //   4. Return true iff priceDiffPct <= priceTolerancePct AND
-        //      qtyDiff <= qtyToleranceAbs.
         BigDecimal priceDiff = internalPrice.subtract(externalPrice).abs();
-        BigDecimal priceDiffPct = internalPrice.compareTo(BigDecimal.ZERO) == 0
+        BigDecimal priceDiffPct = internalPrice.signum() == 0
                 ? BigDecimal.ZERO
-                : priceDiff.divide(internalPrice, RoundingMode.HALF_UP);  
+                : priceDiff.divide(internalPrice, 6, java.math.RoundingMode.HALF_UP);
         BigDecimal qtyDiff = internalQty.subtract(externalQty).abs();
-        return priceDiffPct.compareTo(priceTolerancePct) <= 0 &&
-               qtyDiff.compareTo(qtyToleranceAbs) <= 0;
-        
+
+        boolean priceOk = priceDiffPct.compareTo(priceTolerancePct) <= 0;
+        boolean qtyOk   = qtyDiff.compareTo(qtyToleranceAbs) <= 0;
+        return priceOk && qtyOk;
     }
 }

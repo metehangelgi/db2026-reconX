@@ -1,11 +1,10 @@
 package com.dbtraining.reconx.model;
 
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-
 import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class ReconciliationRuleTest {
 
@@ -22,6 +21,7 @@ class ReconciliationRuleTest {
     void matches(ReconciliationRule rule, BigDecimal pa, BigDecimal pb,
                  BigDecimal qa, BigDecimal qb, boolean expected) {
         // TODO(TICKET-ADV026): assert rule.matches(pa, qa, pb, qb) equals expected for each CSV row.
-        org.junit.jupiter.api.Assertions.fail("TICKET-ADV026 not implemented yet");
+        boolean actual = rule.matches(pa, qa, pb, qb);
+        assertThat(actual).isEqualTo(expected);
     }
 }
