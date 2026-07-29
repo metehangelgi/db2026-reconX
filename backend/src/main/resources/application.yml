@@ -22,6 +22,11 @@ spring:
     change-log: classpath:/db/changelog/db.changelog-master.xml
     enabled: true
 
+  # ADV049 — Liquibase owns the schema; data.sql/schema.sql must never run.
+  sql:
+    init:
+      mode: never
+
   jpa:
     open-in-view: false
     hibernate:

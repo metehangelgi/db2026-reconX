@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ============================================================================
+ TICKET-ADV052 — Hibernate Envers audit tables for Trade
+ WHAT:    revinfo (one row per committed revision) + trades_aud (one row per
+          committed change to a Trade — insert/update/delete). Both are
+          Envers-managed at runtime; Liquibase only needs to create the
+          tables since ddl-auto=validate never lets Hibernate create schema.
+ HOW:     Column list/types captured by booting once with ddl-auto=create
+          against a scratch H2 DB and reading Hibernate's own generated DDL,
+          then hand-normalized to portable types (revtype as SMALLINT, not
+          TINYINT — H2 in MODE=PostgreSQL rejects TINYINT; status as VARCHAR,
+          not H2's native ENUM syntax, since Postgres has no equivalent).
+ WHY:     Gives the compliance/audit trail (TradeHistoryService) a
+          tamper-evident history without triggers.
+ OBSERVE: After 3 updates to one trade, trades_aud has 4 rows for that id
+          (1 insert + 3 updates) and revinfo has 4 matching rev rows.
+ ============================================================================
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="013-create-revinfo" author="trainer">
+        <createTable tableName="revinfo">
+            <column name="rev" type="INT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="revtstmp" type="BIGINT"/>
+        </createTable>
+        <rollback>
+            <dropTable tableName="revinfo"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="013-create-trades-aud" author="trainer">
+        <createTable tableName="trades_aud">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="rev" type="INT">
+                <constraints primaryKey="true" foreignKeyName="fk_trades_aud_revinfo" references="revinfo(rev)"/>
+            </column>
+            <column name="revtype" type="SMALLINT"/>
+            <column name="trade_ref" type="VARCHAR(30)"/>
+            <column name="instrument_id" type="BIGINT"/>
+            <column name="counterparty_id" type="BIGINT"/>
+            <column name="asset_class" type="VARCHAR(20)"/>
+            <column name="side" type="VARCHAR(4)"/>
+            <column name="quantity" type="NUMERIC(18,4)"/>
+            <column name="price" type="NUMERIC(18,4)"/>
+            <column name="trade_date" type="DATE"/>
+            <column name="status" type="VARCHAR(20)"/>
+            <column name="deleted_at" type="TIMESTAMP"/>
+            <column name="created_at" type="TIMESTAMP"/>
+            <column name="modified_at" type="TIMESTAMP"/>
+        </createTable>
+        <rollback>
+            <dropTable tableName="trades_aud"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

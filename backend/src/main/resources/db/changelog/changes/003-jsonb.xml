@@ -19,16 +19,26 @@
                             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
 
     <changeSet id="003-jsonb-on-instruments" author="trainer">
-        <preConditions onFail="MARK_RAN">
-            <dbms type="postgresql"/>
-        </preConditions>
+        <!-- H2 (MODE=PostgreSQL) supports the JSONB column type and this exact
+             DEFAULT '{}'::JSONB cast syntax too, so this runs on every dbms -
+             the entity's @Type(JsonBinaryType.class) column needs to exist in
+             dev (H2) as well as uat/prod (Postgres), or Hibernate's
+             ddl-auto=validate fails at boot with a missing-column error. -->
         <sql>ALTER TABLE instruments ADD COLUMN metadata JSONB DEFAULT '{}'::JSONB NOT NULL;</sql>
-        <sql>CREATE INDEX idx_instruments_metadata_gin ON instruments USING GIN (metadata jsonb_path_ops);</sql>
         <rollback>
-            <sql>DROP INDEX IF EXISTS idx_instruments_metadata_gin;</sql>
             <sql>ALTER TABLE instruments DROP COLUMN metadata;</sql>
         </rollback>
     </changeSet>
 
-    
+    <changeSet id="003-jsonb-on-instruments-gin-index" author="trainer">
+        <preConditions onFail="MARK_RAN">
+            <dbms type="postgresql"/>
+        </preConditions>
+        <sql>CREATE INDEX idx_instruments_metadata_gin ON instruments USING GIN (metadata jsonb_path_ops);</sql>
+        <rollback>
+            <sql>DROP INDEX IF EXISTS idx_instruments_metadata_gin;</sql>
+        </rollback>
+    </changeSet>
+
+
 </databaseChangeLog>

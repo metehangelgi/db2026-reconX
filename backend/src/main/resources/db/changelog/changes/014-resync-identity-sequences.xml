@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ============================================================================
+ TICKET-ADV052 (discovered while testing Envers) — resync IDENTITY counters
+ WHAT:    counterparties/instruments are seeded via <loadData> with explicit
+          id values (008-seed.xml). Neither H2 nor Postgres advances their
+          IDENTITY/SERIAL counter for explicitly-inserted ids, so the very
+          first application-level INSERT (id generated, not supplied) collides
+          with a seeded row's primary key.
+ HOW:     H2: ALTER TABLE ... ALTER COLUMN id RESTART WITH <max+1>.
+          Postgres: setval() on the column's owned sequence.
+ WHY:     Without this, TradeHistoryServiceTest (and any real save() of a new
+          Counterparty/Instrument once Day 5's write endpoints exist) fails
+          with a primary-key violation on the first insert after boot.
+ ============================================================================
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="014-resync-counterparties-identity-h2" author="trainer" dbms="h2">
+        <sql>ALTER TABLE counterparties ALTER COLUMN id RESTART WITH (SELECT COALESCE(MAX(id), 0) + 1 FROM counterparties);</sql>
+        <sql>ALTER TABLE instruments ALTER COLUMN id RESTART WITH (SELECT COALESCE(MAX(id), 0) + 1 FROM instruments);</sql>
+        <rollback/>
+    </changeSet>
+
+    <changeSet id="014-resync-counterparties-identity-postgres" author="trainer" dbms="postgresql">
+        <sql>SELECT setval(pg_get_serial_sequence('counterparties', 'id'), COALESCE((SELECT MAX(id) FROM counterparties), 0) + 1, false);</sql>
+        <sql>SELECT setval(pg_get_serial_sequence('instruments', 'id'), COALESCE((SELECT MAX(id) FROM instruments), 0) + 1, false);</sql>
+        <rollback/>
+    </changeSet>
+
+</databaseChangeLog>

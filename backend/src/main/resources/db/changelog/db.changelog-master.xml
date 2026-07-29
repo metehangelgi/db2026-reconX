@@ -27,5 +27,7 @@
     <include file="changes/008-seed.xml"          relativeToChangelogFile="true"/>
     <include file="changes/011-mv-daily-recon-summary.xml"          relativeToChangelogFile="true"/>
     <include file="changes/012-recon-results.xml"                   relativeToChangelogFile="true"/>
+    <include file="changes/013-envers.xml"                          relativeToChangelogFile="true"/>
+    <include file="changes/014-resync-identity-sequences.xml"       relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
