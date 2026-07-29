@@ -17,6 +17,22 @@ class TradeAnalyticsServiceTest {
     private final TradeAnalyticsService service = new TradeAnalyticsService();
 
     @Test
+    void notionalByCounterparty_countsAndSumsNotionalPerCounterparty() {
+        List<EquityTrade> trades = List.of(
+                equityTradeForCounterparty(1L, new BigDecimal("100"), new BigDecimal("10")),
+                equityTradeForCounterparty(1L, new BigDecimal("200"), new BigDecimal("5")),
+                equityTradeForCounterparty(2L, new BigDecimal("50"), new BigDecimal("4"))
+        );
+
+        Map<Long, TradeAnalyticsService.NotionalSummary> result = service.notionalByCounterparty(trades);
+
+        assertThat(result.get(1L).count()).isEqualTo(2);
+        assertThat(result.get(1L).total()).isEqualByComparingTo(new BigDecimal("2000"));
+        assertThat(result.get(2L).count()).isEqualTo(1);
+        assertThat(result.get(2L).total()).isEqualByComparingTo(new BigDecimal("200"));
+    }
+
+    @Test
     void vwapByInstrument_returnsWeightedAveragePerInstrument() {
         List<EquityTrade> trades = List.of(
                 equityTrade("AAPL", new BigDecimal("100"), new BigDecimal("200")),
@@ -50,6 +66,19 @@ class TradeAnalyticsServiceTest {
 
         assertThat(result.get("AAPL")).isEqualByComparingTo(new BigDecimal("-7500"));
         assertThat(result.get("MSFT")).isEqualByComparingTo(new BigDecimal("-12000"));
+    }
+
+    private EquityTrade equityTradeForCounterparty(long counterpartyId, BigDecimal price, BigDecimal quantity) {
+        return EquityTrade.builder()
+                .tradeRef(TradeRef.of("ABC-20260727-" + (2000 + counterpartyId)))
+                .instrumentSymbol("AAPL")
+                .quantity(quantity)
+                .price(price)
+                .currency("USD")
+                .side(Side.BUY)
+                .tradeDate(LocalDate.of(2026, 7, 27))
+                .counterpartyId(counterpartyId)
+                .build();
     }
 
     private EquityTrade equityTrade(String symbol, BigDecimal quantity, BigDecimal price) {

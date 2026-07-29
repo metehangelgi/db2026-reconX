@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ============================================================================
+ TICKET-ADV045 — recon_results table
+ WHAT:    One row per ReconciliationEngine.reconcile() output — every result,
+          MATCHED or BREAK, not just breaks (see recon_breaks for open-break
+          workflow state).
+ ============================================================================
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="012-create-recon-results" author="trainer">
+        <createTable tableName="recon_results">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="trade_ref" type="VARCHAR(30)"><constraints nullable="false"/></column>
+            <column name="status" type="VARCHAR(20)"><constraints nullable="false"/></column>
+            <column name="discrepancy_type" type="VARCHAR(30)"/>
+            <column name="details" type="VARCHAR"/>
+        </createTable>
+        <createIndex tableName="recon_results" indexName="idx_recon_results_trade_ref">
+            <column name="trade_ref"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="recon_results"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
