@@ -59,13 +59,16 @@ class TradeAnalyticsServiceTest {
         List<EquityTrade> trades = List.of(
                 equityTrade("AAPL", new BigDecimal("100"), new BigDecimal("200"), Side.BUY),
                 equityTrade("AAPL", new BigDecimal("50"), new BigDecimal("250"), Side.SELL),
-                equityTrade("MSFT", new BigDecimal("40"), new BigDecimal("300"), Side.BUY)
+                equityTrade("MSFT", new BigDecimal("40"), new BigDecimal("300"), Side.BUY),
+                equityTrade("GOOG", new BigDecimal("10"), new BigDecimal("1000"), Side.SELL),
+                equityTrade("GOOG", new BigDecimal("10"), new BigDecimal("900"), Side.BUY)
         );
 
         Map<String, BigDecimal> result = service.pnlByInstrument(trades);
 
         assertThat(result.get("AAPL")).isEqualByComparingTo(new BigDecimal("-7500"));
         assertThat(result.get("MSFT")).isEqualByComparingTo(new BigDecimal("-12000"));
+        assertThat(result.get("GOOG")).isEqualByComparingTo(new BigDecimal("1000"));
     }
 
     private EquityTrade equityTradeForCounterparty(long counterpartyId, BigDecimal price, BigDecimal quantity) {

@@ -5,7 +5,8 @@ package com.dbtraining.reconx.repository.entity;
  */
 public enum InstrumentAssetClass {
     EQUITY,
+    FIXED_INCOME,
     FX,
-    BOND,
+    COMMODITY,
     DERIVATIVE
 }

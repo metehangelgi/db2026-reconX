@@ -29,6 +29,14 @@ public record TradeRef(String value) {
         }
     }
 
+    /**
+     * Parses and validates a raw trade reference string.
+     *
+     * @param value the candidate reference, expected to match {@code AAA-YYYYMMDD-NNNN}
+     * @return a validated {@code TradeRef} wrapping {@code value}
+     * @throws NullPointerException     if {@code value} is {@code null}
+     * @throws IllegalArgumentException if {@code value} does not match the expected format
+     */
     public static TradeRef of(String value) {
         return new TradeRef(value);
     }

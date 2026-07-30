@@ -1,0 +1,74 @@
+<!doctype html>
+<!--
+============================================================================
+TICKET-ADV068-070 — Recon run trigger + break resolution (static demo page)
+============================================================================
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>ReconX (static) — Recon</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- TICKET-ADV100 — set the theme before the stylesheet loads so there is no FOUC -->
+  <script>
+    document.documentElement.dataset.theme = localStorage.getItem('reconx-theme') || 'light';
+  </script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="layout__header" role="banner">
+    <h1 class="layout__title">ReconX</h1>
+    <nav class="layout__nav" aria-label="Main navigation">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="trades.html">Trades</a>
+      <a href="recon.html" aria-current="page">Recon</a>
+    </nav>
+    <button id="theme-toggle" aria-label="Toggle light/dark theme">🌗</button>
+  </header>
+
+  <aside class="layout__sidebar" role="complementary">
+    <h2>Quick filters</h2>
+    <ul>
+      <li><a href="#">All trades</a></li>
+      <li><a href="#">Open breaks</a></li>
+      <li><a href="#">Today</a></li>
+    </ul>
+  </aside>
+
+  <main class="layout__main" role="main">
+    <h2>Reconciliation</h2>
+    <!-- This static page has no login of its own — pass a token on the URL,
+         e.g. recon.html?token=<jwt> (copy one from POST /auth/login), the
+         same mechanism js/sse.js uses. Without one, actions below will 401. -->
+    <form id="recon-form" class="recon-form">
+      <label>From <input type="date" id="recon-from" value="2026-01-01" /></label>
+      <label>To   <input type="date" id="recon-to" value="2026-12-31" /></label>
+      <button type="submit">Run recon</button>
+    </form>
+    <p id="recon-job-status" role="status" aria-live="polite"></p>
+
+    <div class="table-scroll">
+      <table class="data-table" id="breaks-table">
+        <thead>
+          <tr>
+            <th>Trade ID</th>
+            <th>Discrepancy</th>
+            <th>Status</th>
+            <th>Detected</th>
+            <th>Note</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="breaks-tbody"><!-- rows injected by js/recon.js --></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="layout__footer" role="contentinfo">
+    <small>ReconX TDI 2026 · static dashboard (Day 7)</small>
+  </footer>
+
+  <script src="js/theme.js"></script>
+  <script src="js/recon.js"></script>
+</body>
+</html>

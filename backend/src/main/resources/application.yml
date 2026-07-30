@@ -35,11 +35,18 @@ spring:
       hibernate.format_sql: true
       hibernate.jdbc.time_zone: UTC
 
-  # ADV081-ADV082 — Caffeine cache config; per-cache spec overrides the global one.
+  # ADV081-ADV082 — Caffeine cache config. The actual per-cache TTLs (5m for
+  # instruments, 1m for counterparties) are defined programmatically in
+  # com.dbtraining.reconx.config.CacheConfig, which registers its own
+  # CacheManager bean; this single global spec is not used once that bean is
+  # present (Spring Boot's cache autoconfiguration backs off).
   cache:
     cache-names: instruments,counterparties
-    caffeine:
-      spec: maximumSize=500,expireAfterWrite=5m
+
+  # TICKET-ADV096 — expose management beans (ReconConfigMBean) via JMX for
+  # runtime toggling of caching and recon tolerance from JConsole.
+  jmx:
+    enabled: true
 
   # ADV128 — Kafka producer/consumer defaults. Topics are created at startup
   # by KafkaTopicsConfig (see com.dbtraining.reconx.kafka.KafkaTopicsConfig).
@@ -73,7 +80,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus,env,loggers
+        include: health,info,metrics,prometheus,env,loggers,caches
       base-path: /actuator
   endpoint:
     health:

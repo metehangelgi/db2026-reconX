@@ -1,6 +1,7 @@
 # Maven build output
 backend/target/
 backend/.mvn/wrapper/maven-wrapper.jar
+recon-audit-starter/target/
 frontend/node_modules/
 frontend/dist/
 

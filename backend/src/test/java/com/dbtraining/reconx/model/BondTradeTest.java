@@ -40,7 +40,23 @@ class BondTradeTest {
         );
 
         assertEquals(
-                "maturityDate cannot be before tradeDate",
+                "maturityDate must be strictly after tradeDate",
+                exception.getMessage()
+        );
+    }
+
+    @Test
+    void shouldRejectMaturityDateEqualToTradeDate() {
+        IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
+                () -> validBuilder()
+                        .tradeDate(LocalDate.of(2026, 7, 27))
+                        .maturityDate(LocalDate.of(2026, 7, 27))
+                        .build()
+        );
+
+        assertEquals(
+                "maturityDate must be strictly after tradeDate",
                 exception.getMessage()
         );
     }

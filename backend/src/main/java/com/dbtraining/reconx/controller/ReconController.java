@@ -1,18 +1,25 @@
 package com.dbtraining.reconx.controller;
 
+import com.dbtraining.reconx.dto.ReconBreakResponse;
+import com.dbtraining.reconx.dto.ReconJobResponse;
 import com.dbtraining.reconx.dto.ReconRunRequest;
 import com.dbtraining.reconx.exception.TradeNotFoundException;
 import com.dbtraining.reconx.repository.ReconBreakRepository;
+import com.dbtraining.reconx.repository.ReconJobRepository;
 import com.dbtraining.reconx.repository.entity.ReconBreak;
+import com.dbtraining.reconx.repository.entity.ReconJob;
+import com.dbtraining.reconx.service.ReconJobRunner;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -29,34 +36,57 @@ import java.util.UUID;
 public class ReconController {
 
     private final ReconBreakRepository breaks;
+    private final ReconJobRepository jobs;
+    private final ReconJobRunner jobRunner;
 
-    public ReconController(ReconBreakRepository breaks) { this.breaks = breaks; }
+    public ReconController(ReconBreakRepository breaks, ReconJobRepository jobs, ReconJobRunner jobRunner) {
+        this.breaks = breaks;
+        this.jobs = jobs;
+        this.jobRunner = jobRunner;
+    }
 
     @PostMapping("/run")
     @Operation(summary = "Trigger a reconciliation job (async)")
     public ResponseEntity<Map<String, String>> runRecon(@Valid @RequestBody ReconRunRequest req) {
-        // TODO(TICKET-ADV068): generate a jobId, write a row to recon_jobs, and
-        //   return 202 Accepted with {"jobId": ..., "status": "QUEUED"}. A
-        //   worker (Day 6 / Kafka consumer) picks the job up asynchronously.
-        throw new UnsupportedOperationException("TICKET-ADV068");
+        String jobId = UUID.randomUUID().toString();
+
+        ReconJob job = new ReconJob();
+        job.setJobId(jobId);
+        job.setFromDate(req.from());
+        job.setToDate(req.to());
+        job.setStatus("QUEUED");
+        jobs.save(job);
+
+        jobRunner.run(jobId, req.from(), req.to());
+
+        return ResponseEntity.accepted()
+                .location(URI.create("/api/v1/recon/jobs/" + jobId + "/results"))
+                .body(Map.of("jobId", jobId, "status", "QUEUED"));
+    }
+
+    @GetMapping("/jobs/{jobId}")
+    @Operation(summary = "Get job-level stats for a recon run (total trades processed, breaks detected, status)")
+    public ReconJobResponse job(@PathVariable String jobId) {
+        return jobRunner.findJob(jobId);
     }
 
     @GetMapping("/jobs/{jobId}/results")
     @Operation(summary = "Get results for a recon job")
-    public List<ReconBreak> results(@PathVariable String jobId) {
-        // TODO(TICKET-ADV069): once recon_jobs + recon_breaks tables are wired,
-        //   return breaks.findByJobId(jobId). Day-0 returns an empty list so
-        //   the React breaks-table renders "no breaks" gracefully.
-        return Collections.emptyList();
+    public List<ReconBreakResponse> results(@PathVariable String jobId) {
+        return jobRunner.findResultsForJob(jobId);
     }
 
     @PutMapping("/results/{id}/resolve")
     @Operation(summary = "Mark a recon break as RESOLVED with a note")
-    public ResponseEntity<ReconBreak> resolve(@PathVariable Long id,
-                                              @RequestBody Map<String, String> body) {
-        // TODO(TICKET-ADV070): load the ReconBreak, call rb.resolve(note), save,
-        //   and return 200 with the updated entity. Throw TradeNotFoundException
-        //   when the id is unknown.
-        throw new UnsupportedOperationException("TICKET-ADV070");
+    public ResponseEntity<ReconBreakResponse> resolve(@PathVariable Long id,
+                                              @Valid @RequestBody ResolutionRequest req) {
+        ReconBreak rb = breaks.findById(id)
+                .orElseThrow(() -> new TradeNotFoundException("Recon break not found: " + id));
+        rb.resolve(req.note());
+        breaks.save(rb);
+        return ResponseEntity.ok(jobRunner.enrich(rb));
     }
+
+    /** TICKET-ADV070 — resolution notes must be present and reasonably bounded. */
+    public record ResolutionRequest(@NotBlank @Size(max = 500) String note) {}
 }

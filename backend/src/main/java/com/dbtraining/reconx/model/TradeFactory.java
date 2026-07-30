@@ -1,5 +1,7 @@
 package com.dbtraining.reconx.model;
 
+import com.dbtraining.reconx.exception.InvalidTradeException;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
@@ -27,27 +29,39 @@ public final class TradeFactory {
     private TradeFactory() { }
 
     /**
-     * TODO(TICKET-ADV023):
-     *   1. Parse assetClass string into TradeType.AssetClass enum (toUpperCase first).
-     *   2. switch on the enum and dispatch to the matching equity/fx/bond/derivative
-     *      helper below.
-     *   3. The switch must be exhaustive — every TradeType.AssetClass case handled.
+     * Builds a {@link TradeType} from an untyped asset-class discriminator and
+     * field map (the shape both the Kafka consumer and the REST POST endpoint
+     * receive before any typed parsing has happened).
+     *
+     * @param assetClass one of {@code EQUITY}/{@code FX}/{@code BOND}/{@code DERIVATIVE},
+     *                   case-insensitive
+     * @param p          field values keyed by name; see the private per-asset-class
+     *                   helpers below for the exact keys each asset class expects
+     * @return a fully validated, immutable {@link TradeType} instance
+     * @throws InvalidTradeException if {@code assetClass} doesn't match a known
+     *         asset class, a required key is missing from {@code p}, a value has
+     *         the wrong runtime type, or the resulting builder rejects the data —
+     *         this method never lets a raw {@link ClassCastException},
+     *         {@link NullPointerException}, or {@link IllegalArgumentException}
+     *         escape to the caller
      */
     public static TradeType create(String assetClass, Map<String, Object> p) {
-        TradeType.AssetClass ac = TradeType.AssetClass.valueOf(assetClass.toUpperCase());
-        return switch (ac) {
-            case EQUITY     -> equity(p);
-            case FX         -> fx(p);
-            case BOND       -> bond(p);
-            case DERIVATIVE -> derivative(p);
-        };
+        try {
+            TradeType.AssetClass ac = TradeType.AssetClass.valueOf(assetClass.toUpperCase());
+            return switch (ac) {
+                case EQUITY     -> equity(p);
+                case FX         -> fx(p);
+                case BOND       -> bond(p);
+                case DERIVATIVE -> derivative(p);
+            };
+        } catch (RuntimeException ex) {
+            throw new InvalidTradeException(
+                    "Cannot build a %s trade from the supplied fields: %s".formatted(assetClass, ex.getMessage()),
+                    ex);
+        }
     }
 
-    /**
-     * TODO(TICKET-ADV023):
-     *   Build an EquityTrade from the map. Expected keys: tradeRef, symbol,
-     *   quantity, price, currency, side, tradeDate, counterpartyId.
-     */
+    /** Expected keys: tradeRef, symbol, quantity, price, currency, side, tradeDate, counterpartyId. */
     private static EquityTrade equity(Map<String, Object> p) {
         return EquityTrade.builder()
                 .tradeRef(TradeRef.of((String) p.get("tradeRef")))
@@ -61,11 +75,7 @@ public final class TradeFactory {
                 .build();
     }
 
-    /**
-     * TODO(TICKET-ADV023):
-     *   Build an FXTrade from the map. Expected keys: tradeRef, ccy1, ccy2,
-     *   notionalCcy1, fxRate, side, tradeDate, counterpartyId.
-     */
+    /** Expected keys: tradeRef, ccy1, ccy2, notionalCcy1, fxRate, side, tradeDate, counterpartyId. */
     private static FXTrade fx(Map<String, Object> p) {
         return FXTrade.builder()
                 .tradeRef(TradeRef.of((String) p.get("tradeRef")))
@@ -79,12 +89,7 @@ public final class TradeFactory {
                 .build();
     }
 
-    /**
-     * TODO(TICKET-ADV023):
-     *   Build a BondTrade from the map. Expected keys: tradeRef, isin,
-     *   faceValue, couponRate, maturityDate, currency, side, tradeDate,
-     *   counterpartyId.
-     */
+    /** Expected keys: tradeRef, isin, faceValue, couponRate, maturityDate, currency, side, tradeDate, counterpartyId. */
     private static BondTrade bond(Map<String, Object> p) {
         return BondTrade.builder()
                 .tradeRef(TradeRef.of((String) p.get("tradeRef")))
@@ -99,12 +104,7 @@ public final class TradeFactory {
                 .build();
     }
 
-    /**
-     * TODO(TICKET-ADV023):
-     *   Build a DerivativeTrade from the map. Expected keys: tradeRef,
-     *   underlying, strike, quantity, expiry, optionType, currency, side,
-     *   tradeDate, counterpartyId.
-     */
+    /** Expected keys: tradeRef, underlying, strike, quantity, expiry, optionType, currency, side, tradeDate, counterpartyId. */
     private static DerivativeTrade derivative(Map<String, Object> p) {
         return DerivativeTrade.builder()
                 .tradeRef(TradeRef.of((String) p.get("tradeRef")))

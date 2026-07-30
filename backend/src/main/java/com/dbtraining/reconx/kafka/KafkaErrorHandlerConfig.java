@@ -1,6 +1,14 @@
 package com.dbtraining.reconx.kafka;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.TopicPartition;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.kafka.support.serializer.DeserializationException;
+import org.springframework.util.backoff.ExponentialBackOff;
 
 /**
  * ============================================================================
@@ -22,18 +30,6 @@ import org.springframework.context.annotation.Configuration;
  *          original.
  * ============================================================================
  *
- *  TODO(TICKET-ADV134 + ADV135):
- *    @Bean
- *    public DefaultErrorHandler errorHandler(KafkaTemplate<Object,Object> template) {
- *        DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(
- *            template,
- *            (ConsumerRecord<?,?> rec, Exception ex) ->
- *                new TopicPartition(rec.topic() + "-dlq", rec.partition()));
- *        ExponentialBackOff backoff = new ExponentialBackOff(1000L, 2.0);
- *        backoff.setMaxAttempts(3);
- *        return new DefaultErrorHandler(recoverer, backoff);
- *    }
- *
  *  GOTCHA: trade-events-dlq must already exist (TICKET-ADV128). The
  *          recoverer does NOT auto-create the topic.
  * ============================================================================
@@ -41,5 +37,18 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class KafkaErrorHandlerConfig {
 
-    // TODO(TICKET-ADV134 + ADV135): define the errorHandler @Bean — see comments above.
+    @Bean
+    public DefaultErrorHandler errorHandler(KafkaTemplate<Object,Object> template) {
+        DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(
+            template,
+            (ConsumerRecord<?,?> rec, Exception ex) ->
+                new TopicPartition(rec.topic() + "-dlq", rec.partition()));
+        ExponentialBackOff backoff = new ExponentialBackOff(1000L, 2.0);
+        backoff.setMaxAttempts(3);
+        DefaultErrorHandler handler = new DefaultErrorHandler(recoverer, backoff);
+        // A message that fails to deserialize will never succeed on retry —
+        // send it straight to the DLQ instead of burning 3 retry attempts on it.
+        handler.addNotRetryableExceptions(DeserializationException.class);
+        return handler;
+    }
 }

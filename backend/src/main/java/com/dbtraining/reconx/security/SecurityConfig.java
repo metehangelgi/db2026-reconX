@@ -1,9 +1,17 @@
 package com.dbtraining.reconx.security;
 
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -57,31 +65,57 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  * ============================================================================
  */
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
-        // ====================================================================
-        // Day-1 permissive default — replace with TICKET-ADV073 + ADV074 rules.
-        // ====================================================================
-        // TODO(TICKET-ADV073 + ADV074): swap this permitAll() block for the
-        //   stateless JWT + role-based chain shown in the Javadoc above.
-        // ====================================================================
-
-        return http
-                .csrf(csrf -> csrf.disable())
-                .headers(h -> h.frameOptions(f -> f.disable())) // allow /h2 in dev
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-                .build();
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           JwtAuthenticationFilter jwtFilter) throws Exception {
+        http
+          .csrf(AbstractHttpConfigurer::disable)
+          .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+          .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+          .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/auth/login","/actuator/health/**","/actuator/info",
+                             "/actuator/prometheus","/swagger-ui.html","/swagger-ui/**",
+                             "/v3/api-docs/**","/h2/**","/v0/**").permitAll()
+            .requestMatchers(HttpMethod.GET,    "/v1/trades/**").hasAnyRole("VIEWER","TRADER","RECON_ANALYST","ADMIN")
+            .requestMatchers(HttpMethod.POST,   "/v1/trades").hasAnyRole("TRADER","ADMIN")
+            .requestMatchers(HttpMethod.PUT,    "/v1/trades/**").hasAnyRole("TRADER","ADMIN")
+            .requestMatchers(HttpMethod.PATCH,  "/v1/trades/**").hasAnyRole("TRADER","ADMIN")
+            .requestMatchers(HttpMethod.DELETE, "/v1/trades/**").hasRole("ADMIN")
+            .requestMatchers("/v1/recon/**").hasAnyRole("RECON_ANALYST","ADMIN")
+            .requestMatchers("/v1/audit/**").hasAnyRole("RECON_ANALYST","ADMIN")
+            .anyRequest().authenticated())
+          .headers(h -> h.frameOptions(f -> f.disable()))
+          .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        return http.build();
     }
 
-    // TODO(TICKET-ADV073): @Bean PasswordEncoder (BCrypt).
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    // TODO(TICKET-ADV073): register JwtAuthenticationFilter before
-    //                     UsernamePasswordAuthenticationFilter.
-    // TODO(TICKET-ADV074): add @EnableMethodSecurity and the RBAC matchers.
+
+    /**
+     * JwtAuthenticationFilter is a @Component so it can be constructor-injected
+     * above via addFilterBefore — but that same @Component annotation also
+     * makes Spring Boot auto-register it a SECOND time as a generic servlet
+     * filter applied to every URL, outside Spring Security's own chain. That
+     * second, uncoordinated invocation runs at a different point in the filter
+     * order than Security's addFilterBefore wiring; because
+     * OncePerRequestFilter guards against re-entry per request, whichever
+     * invocation runs first "wins" and the other is skipped — and if the
+     * generic registration runs before Security's own context filter, the
+     * SecurityContext it sets gets wiped before authorization checks run,
+     * silently turning every valid JWT into an unauthenticated request (401).
+     * Disabling the auto-registration keeps the bean usable for injection
+     * while ensuring it only ever runs once, inside the chain built above.
+     */
+    @Bean
+    public FilterRegistrationBean<JwtAuthenticationFilter> disableJwtFilterAutoRegistration(JwtAuthenticationFilter filter) {
+        FilterRegistrationBean<JwtAuthenticationFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
 }

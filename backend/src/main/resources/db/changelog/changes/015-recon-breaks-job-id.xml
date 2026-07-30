@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ============================================================================
+ TICKET-ADV069 — link recon_breaks to the recon_jobs run that detected them
+ WHY:     GET /v1/recon/jobs/{jobId}/results needs to scope breaks to a
+          single run; recon_breaks had no column tying a break back to the
+          job that produced it.
+ ============================================================================
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="015-recon-breaks-add-job-id" author="reconx-team">
+        <addColumn tableName="recon_breaks">
+            <column name="job_id" type="VARCHAR(36)"/>
+        </addColumn>
+        <addForeignKeyConstraint baseTableName="recon_breaks" baseColumnNames="job_id"
+                                 constraintName="fk_recon_breaks_job"
+                                 referencedTableName="recon_jobs" referencedColumnNames="job_id"/>
+        <createIndex tableName="recon_breaks" indexName="idx_recon_breaks_job_id">
+            <column name="job_id"/>
+        </createIndex>
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="recon_breaks" constraintName="fk_recon_breaks_job"/>
+            <dropColumn tableName="recon_breaks" columnName="job_id"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -11,7 +11,24 @@ scrape_configs:
   - job_name: 'reconx-backend'
     metrics_path: '/api/actuator/prometheus'
     static_configs:
-      - targets: ['backend:8080']
+      # NOTE: 'backend:8080' is the correct target when the backend runs as the
+      # docker-compose 'backend' service (matches production topology) — but
+      # for this local exploration session the backend is running directly on
+      # the host via `mvn spring-boot:run` for fast iteration, so Prometheus
+      # (itself in a container) needs Docker Desktop's host bridge instead.
+      # Revert to 'backend:8080' before running the full docker-compose stack
+      # for real (e.g. before ADV152's healthcheck verification).
+      - targets: ['host.docker.internal:8080']
+
+  # TICKET-ADV149 — Kafka broker JMX metrics via a jmx_exporter javaagent.
+  # NOTE: docker-compose.yml's `kafka` service does not currently run a
+  # jmx_exporter javaagent on port 9101 (no KAFKA_JMX_OPTS / mounted exporter
+  # config) — this job will show as DOWN until that agent is wired into the
+  # kafka container. Declared here so the scrape config itself is complete
+  # and ready the moment that's added.
+  - job_name: 'kafka-jmx'
+    static_configs:
+      - targets: ['kafka:9101']
 
   - job_name: 'prometheus'
     static_configs:

@@ -29,4 +29,19 @@ public record TradeEvent(
     public enum EventType {
         TRADE_CREATED, TRADE_UPDATED, TRADE_CANCELLED
     }
+
+    /** A brand-new trade — no prior state, so {@code before} is {@code null}. */
+    public static TradeEvent created(String tradeRef, String actor, String after) {
+        return new TradeEvent(UUID.randomUUID(), tradeRef, EventType.TRADE_CREATED, Instant.now(), actor, null, after);
+    }
+
+    /** An existing trade changed — carries both the old and new snapshot. */
+    public static TradeEvent updated(String tradeRef, String actor, String before, String after) {
+        return new TradeEvent(UUID.randomUUID(), tradeRef, EventType.TRADE_UPDATED, Instant.now(), actor, before, after);
+    }
+
+    /** A trade was cancelled — no resulting state, so {@code after} is {@code null}. */
+    public static TradeEvent cancelled(String tradeRef, String actor, String before) {
+        return new TradeEvent(UUID.randomUUID(), tradeRef, EventType.TRADE_CANCELLED, Instant.now(), actor, before, null);
+    }
 }

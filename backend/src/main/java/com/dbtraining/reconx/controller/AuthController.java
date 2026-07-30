@@ -2,7 +2,7 @@ package com.dbtraining.reconx.controller;
 
 import com.dbtraining.reconx.dto.LoginRequest;
 import com.dbtraining.reconx.dto.LoginResponse;
-import com.dbtraining.reconx.exception.InvalidTradeException;
+import com.dbtraining.reconx.exception.InvalidCredentialsException;
 import com.dbtraining.reconx.repository.AppUserRepository;
 import com.dbtraining.reconx.repository.entity.AppUser;
 import com.dbtraining.reconx.security.JwtTokenProvider;
@@ -36,10 +36,10 @@ public class AuthController {
     @PostMapping("/login")
     @Operation(summary = "Exchange email + password for a JWT")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest req) {
-        // TODO(TICKET-ADV072): look up the user by email, verify BCrypt password,
-        //   then call jwt.generate(email, role) and return a LoginResponse.
-        //   Reject with InvalidTradeException("Invalid credentials") on any mismatch
-        //   (do NOT leak whether the email or the password was the problem).
-        throw new UnsupportedOperationException("TICKET-ADV072");
+        AppUser user = users.findByEmail(req.email())
+                .filter(u -> encoder.matches(req.password(), u.getPasswordHash()))
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
+        String token = jwt.generate(user.getEmail(), user.getRole());
+        return ResponseEntity.ok(new LoginResponse(token, "Bearer", jwt.expirationSeconds(), user.getRole()));
     }
 }

@@ -11,6 +11,20 @@ import java.util.Map;
  * TICKET-ADV051 — JPA entity Instrument. JSONB metadata column wired via
  * the Hypersistence Utils JsonBinaryType on Postgres; H2 stores it as a
  * plain CLOB via the dialect translation (acceptable for dev).
+ *
+ * KNOWN LIMITATION: reading this column back through JPA against H2
+ * specifically (the `dev` profile) throws "cannot be transformed to Json
+ * object" — H2's JDBC driver returns the JSON text quoted (`"{}"` instead
+ * of Postgres's unquoted `{}`), which both this library's parser and
+ * Hibernate 6's own native @JdbcTypeCode(SqlTypes.JSON) mapping reject the
+ * same way (tried and reverted — same underlying failure either way, this
+ * is a JDBC-driver-level representation quirk, not a library choice).
+ * A real fix needs a custom H2-specific JavaType/JdbcType pair that strips
+ * the extra quoting, or avoiding JSON columns on H2 entirely (e.g. a
+ * profile-conditional plain-text mapping) — out of scope for this pass.
+ * The Testcontainers/Postgres path this project actually tests against is
+ * unaffected; only local `dev` (H2) runs hit this on any endpoint that
+ * loads an Instrument through JPA (e.g. creating or updating a trade).
  */
 @Entity
 @Table(name = "instruments")

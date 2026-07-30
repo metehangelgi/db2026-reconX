@@ -23,7 +23,26 @@
              DEFAULT '{}'::JSONB cast syntax too, so this runs on every dbms -
              the entity's @Type(JsonBinaryType.class) column needs to exist in
              dev (H2) as well as uat/prod (Postgres), or Hibernate's
-             ddl-auto=validate fails at boot with a missing-column error. -->
+             ddl-auto=validate fails at boot with a missing-column error.
+
+             KNOWN LIMITATION (not fixed here): on H2, reading this column
+             back through Hypersistence Utils' JsonBinaryType throws
+             "cannot be transformed to Json object" — H2's JDBC driver
+             returns the JSON text *quoted* (getString() on an empty object
+             yields the 3 characters "{}", not Postgres's unquoted `{}`),
+             and JsonJavaTypeDescriptor.fromString() can't parse a quoted
+             string as JSON. A plain VARCHAR column with a matching default
+             fixes the read (verified locally), but ddl-auto=validate then
+             rejects it at boot ("found [character varying], but expecting
+             [jsonb]") since @Column(columnDefinition = "jsonb") is a single
+             annotation shared across all profiles. Properly fixing this
+             needs either a dialect-aware JSON mapping (e.g. Hibernate 6's
+             native @JdbcTypeCode(SqlTypes.JSON) instead of Hypersistence
+             Utils) or a profile-specific entity mapping — out of scope for
+             this pass. Net effect: reading an Instrument through JPA (e.g.
+             any endpoint that loads a trade's instrument) throws on the
+             `dev` (H2) profile specifically; the Testcontainers/Postgres
+             path this project actually tests against is unaffected. -->
         <sql>ALTER TABLE instruments ADD COLUMN metadata JSONB DEFAULT '{}'::JSONB NOT NULL;</sql>
         <rollback>
             <sql>ALTER TABLE instruments DROP COLUMN metadata;</sql>

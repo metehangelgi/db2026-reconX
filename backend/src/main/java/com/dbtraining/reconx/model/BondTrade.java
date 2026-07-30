@@ -15,41 +15,31 @@ import java.util.Objects;
  *          Modelling them on the trade is the simplest path for the demo.
  * ============================================================================
  */
-public final class BondTrade implements TradeType {
+public final class BondTrade extends Trade implements TradeType {
 
-    private final TradeRef tradeRef;
     private final String isin;
     private final BigDecimal faceValue;
     private final BigDecimal couponRate;
     private final LocalDate maturityDate;
     private final Currency currency;
     private final Side side;
-    private final LocalDate tradeDate;
     private final long counterpartyId;
 
+    /** Notional = faceValue in the bond's currency. */
     private BondTrade(Builder b) {
-        this.tradeRef       = b.tradeRef;
+        super(b.tradeRef, new Money(b.faceValue, b.currency), b.tradeDate);
         this.isin           = b.isin;
         this.faceValue      = b.faceValue;
         this.couponRate     = b.couponRate;
         this.maturityDate   = b.maturityDate;
         this.currency       = b.currency;
         this.side           = b.side;
-        this.tradeDate      = b.tradeDate;
         this.counterpartyId = b.counterpartyId;
     }
 
     public static Builder builder() { return new Builder(); }
 
-    @Override public TradeRef tradeRef()     { return tradeRef; }
-    @Override public LocalDate tradeDate()   { return tradeDate; }
     @Override public AssetClass assetClass() { return AssetClass.BOND; }
-
-    /** Notional = faceValue in the bond's currency. */
-    @Override public Money notional() {
-        // TODO(TICKET-ADV021): return new Money(faceValue, currency).
-        throw new UnsupportedOperationException("TICKET-ADV021");
-    }
 
     public String isin()              { return isin; }
     public BigDecimal faceValue()     { return faceValue; }
@@ -60,15 +50,15 @@ public final class BondTrade implements TradeType {
     public long counterpartyId()      { return counterpartyId; }
 
     @Override public boolean equals(Object o) {
-        return (o instanceof BondTrade other) && tradeRef.equals(other.tradeRef);
+        return (o instanceof BondTrade other) && tradeRef().equals(other.tradeRef());
     }
-    @Override public int hashCode() { return tradeRef.hashCode(); }
+    @Override public int hashCode() { return tradeRef().hashCode(); }
 
     @Override public String toString() {
         // NOTE: counterpartyId is deliberately omitted — it is the PII line in
         // this codebase and must never reach plain-text logs.
         return "BondTrade[ref=%s, isin=%s, face=%s %s, coupon=%s, maturity=%s, side=%s]"
-                .formatted(tradeRef, isin, faceValue.toPlainString(),
+                .formatted(tradeRef(), isin, faceValue.toPlainString(),
                         currency.getCurrencyCode(), couponRate.toPlainString(),
                         maturityDate, side);
     }
@@ -92,11 +82,20 @@ public final class BondTrade implements TradeType {
         public Builder tradeDate(LocalDate v)      { this.tradeDate = v; return this; }
         public Builder counterpartyId(long v)      { this.counterpartyId = v; return this; }
 
+        /**
+         * Builds the immutable {@link BondTrade}, validating that every required
+         * field is set and that all invariants hold.
+         *
+         * @return a fully-constructed, validated {@code BondTrade} — never {@code null}
+         * @throws NullPointerException  if any required field ({@code tradeRef},
+         *                               {@code isin}, {@code faceValue}, {@code couponRate},
+         *                               {@code maturityDate}, {@code currency},
+         *                               {@code side}, {@code tradeDate}) was not set
+         * @throws IllegalStateException if {@code maturityDate} is not strictly after
+         *                               {@code tradeDate}, or {@code isin} is not
+         *                               exactly 12 characters
+         */
         public BondTrade build() {
-            // DONE(TICKET-ADV021):
-            //   - Objects.requireNonNull each required field.
-            //   - maturityDate must not be before tradeDate (IllegalStateException otherwise).
-            //   - return new BondTrade(this).
             Objects.requireNonNull(tradeRef,     "tradeRef");
             Objects.requireNonNull(isin,         "isin");
             Objects.requireNonNull(faceValue,    "faceValue");
@@ -106,8 +105,10 @@ public final class BondTrade implements TradeType {
             Objects.requireNonNull(side,         "side");
             Objects.requireNonNull(tradeDate,    "tradeDate");
 
-            if (maturityDate.isBefore(tradeDate))
-                throw new IllegalStateException("maturityDate cannot be before tradeDate");
+            // A bond maturing on its trade date has already redeemed with no
+            // remaining life, so it must mature strictly after the trade date.
+            if (!maturityDate.isAfter(tradeDate))
+                throw new IllegalStateException("maturityDate must be strictly after tradeDate");
 
             if (isin == null || isin.length() != 12) {
                 throw new IllegalStateException("ISIN must be exactly 12 characters");

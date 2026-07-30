@@ -29,5 +29,7 @@
     <include file="changes/012-recon-results.xml"                   relativeToChangelogFile="true"/>
     <include file="changes/013-envers.xml"                          relativeToChangelogFile="true"/>
     <include file="changes/014-resync-identity-sequences.xml"       relativeToChangelogFile="true"/>
+    <include file="changes/015-recon-breaks-job-id.xml"             relativeToChangelogFile="true"/>
+    <include file="changes/016-recon-breaks-priority.xml"           relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

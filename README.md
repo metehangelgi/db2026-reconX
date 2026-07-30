@@ -45,6 +45,61 @@ external counterparty/custodian feeds — built across 10 days, 165 tickets.
 
 ---
 
+## Runtime architecture
+
+```mermaid
+graph LR
+    subgraph Client
+        FE[React Frontend + Vite]
+    end
+
+    subgraph Backend["Spring Boot recon-service"]
+        API[REST API<br/>Security/JWT + RBAC]
+        KP[TradeEventProducer]
+        KC[ReconciliationConsumer<br/>AuditEventConsumer<br/>AlertConsumer]
+        MET[Actuator / Micrometer]
+    end
+
+    subgraph Kafka["Apache Kafka"]
+        T1[trade-events]
+        T2[recon-results]
+        T3[system-alerts]
+        DLQ[*-dlq topics]
+    end
+
+    DB[(PostgreSQL<br/>Liquibase-managed)]
+    PROM[Prometheus]
+    GRAF[Grafana]
+
+    FE -- HTTPS --> API
+    FE -. SSE .-> API
+    API -- JDBC --> DB
+    API -- publish --> KP
+    KP --> T1
+    T1 --> KC
+    T2 --> KC
+    T3 --> KC
+    KC -- failed messages --> DLQ
+    KC -- persist --> DB
+    MET -- /actuator/prometheus --> PROM
+    PROM --> GRAF
+```
+
+## CI/CD + deploy flow
+
+```mermaid
+graph LR
+    DEV[Developer push / PR] --> CI[GitHub Actions CI]
+    CI --> BUILD[mvn verify + npm test/build]
+    BUILD --> COVERAGE[JaCoCo coverage gate]
+    COVERAGE --> IMG[Build Docker images<br/>backend + frontend]
+    IMG --> GHCR[Push to GHCR]
+    GHCR --> LAPTOP[Demo laptop: docker compose pull]
+    LAPTOP --> UP[docker compose up -d<br/>7 services]
+```
+
+---
+
 ## Repository layout
 
 ```
@@ -175,6 +230,12 @@ docker compose up -d       # brings up all 7 services
 ```
 
 Full walkthrough: [`student-guides/day10/README.md`](./student-guides/day10/README.md).
+
+---
+
+## API versioning
+
+Every live controller is mounted under `/api/v1/...` — the version is part of the URL, not a header, so it's visible in logs and impossible for a client to omit by accident. When a breaking change is needed, the old version keeps responding under its own prefix (see `/v0/trades` in `DeprecatedApiController`) with `410 Gone` plus `Deprecation`/`Sunset`/`Link` headers, instead of a bare 404 — this gives clients a machine-readable signal and a pointer to the successor endpoint well before the sunset date.
 
 ---
 

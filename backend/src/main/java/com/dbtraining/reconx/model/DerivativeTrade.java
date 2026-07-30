@@ -14,11 +14,10 @@ import java.util.Objects;
  *          trade's currency (simplified — real derivatives use delta-adjusted).
  * ============================================================================
  */
-public final class DerivativeTrade implements TradeType {
+public final class DerivativeTrade extends Trade implements TradeType {
 
     public enum OptionType { CALL, PUT }
 
-    private final TradeRef tradeRef;
     private final String underlying;
     private final BigDecimal strike;
     private final BigDecimal quantity;
@@ -26,11 +25,11 @@ public final class DerivativeTrade implements TradeType {
     private final OptionType optionType;
     private final Currency currency;
     private final Side side;
-    private final LocalDate tradeDate;
     private final long counterpartyId;
 
+    /** Simplified notional = strike * quantity in the trade currency. */
     private DerivativeTrade(Builder b) {
-        this.tradeRef       = b.tradeRef;
+        super(b.tradeRef, new Money(b.strike.multiply(b.quantity), b.currency), b.tradeDate);
         this.underlying     = b.underlying;
         this.strike         = b.strike;
         this.quantity       = b.quantity;
@@ -38,21 +37,12 @@ public final class DerivativeTrade implements TradeType {
         this.optionType     = b.optionType;
         this.currency       = b.currency;
         this.side           = b.side;
-        this.tradeDate      = b.tradeDate;
         this.counterpartyId = b.counterpartyId;
     }
 
     public static Builder builder() { return new Builder(); }
 
-    @Override public TradeRef tradeRef()     { return tradeRef; }
-    @Override public LocalDate tradeDate()   { return tradeDate; }
     @Override public AssetClass assetClass() { return AssetClass.DERIVATIVE; }
-
-    /** Simplified notional = strike * quantity in the trade currency. */
-    @Override public Money notional() {
-        // TODO(TICKET-ADV022): return new Money(strike * quantity, currency).
-        return new Money(strike.multiply(quantity), currency);
-    }
 
     public String underlying()       { return underlying; }
     public BigDecimal strike()       { return strike; }
@@ -64,15 +54,15 @@ public final class DerivativeTrade implements TradeType {
     public long counterpartyId()     { return counterpartyId; }
 
     @Override public boolean equals(Object o) {
-        return (o instanceof DerivativeTrade other) && tradeRef.equals(other.tradeRef);
+        return (o instanceof DerivativeTrade other) && tradeRef().equals(other.tradeRef());
     }
-    @Override public int hashCode() { return tradeRef.hashCode(); }
+    @Override public int hashCode() { return tradeRef().hashCode(); }
 
     @Override public String toString() {
         // NOTE: counterpartyId is deliberately omitted — it is the PII line in
         // this codebase and must never reach plain-text logs.
         return "DerivativeTrade[ref=%s, %s %s on %s, strike=%s %s, qty=%s, expiry=%s, side=%s]"
-                .formatted(tradeRef, optionType, underlying, tradeDate,
+                .formatted(tradeRef(), optionType, underlying, tradeDate(),
                         strike.toPlainString(), currency.getCurrencyCode(),
                         quantity.toPlainString(), expiry, side);
     }
@@ -98,12 +88,26 @@ public final class DerivativeTrade implements TradeType {
         public Builder tradeDate(LocalDate v)      { this.tradeDate = v; return this; }
         public Builder counterpartyId(long v)      { this.counterpartyId = v; return this; }
 
+        /**
+         * Builds the immutable {@link DerivativeTrade}, validating that every
+         * required field is set and that all invariants hold.
+         *
+         * <p>Note: {@code expiry} is validated only against {@code tradeDate} —
+         * an {@code expiry} in the past relative to today is deliberately
+         * accepted, since an expired derivative is still a valid historical
+         * record.
+         *
+         * @return a fully-constructed, validated {@code DerivativeTrade} — never {@code null}
+         * @throws NullPointerException  if any required field ({@code tradeRef},
+         *                               {@code underlying}, {@code strike},
+         *                               {@code quantity}, {@code expiry},
+         *                               {@code optionType}, {@code currency},
+         *                               {@code side}, {@code tradeDate}) was not set
+         * @throws IllegalStateException if {@code strike} or {@code quantity} is not
+         *                               strictly positive, or {@code expiry} is not
+         *                               strictly after {@code tradeDate}
+         */
         public DerivativeTrade build() {
-            // TODO(TICKET-ADV022):
-            //   - Objects.requireNonNull each required field.
-            //   - strike and quantity must be > 0.
-            //   - expiry must not be before tradeDate.
-            //   - return new DerivativeTrade(this).
             Objects.requireNonNull(tradeRef, "tradeRef is required");
             Objects.requireNonNull(underlying, "underlying is required");
             Objects.requireNonNull(strike, "strike is required");
@@ -120,9 +124,17 @@ public final class DerivativeTrade implements TradeType {
             if (quantity.compareTo(BigDecimal.ZERO) <= 0) {
                 throw new IllegalStateException("quantity must be > 0");
             }
-            if (expiry.isBefore(tradeDate)) {
-                throw new IllegalStateException("expiry must not be before tradeDate");
+            // An option struck and expiring on the same day has zero time value
+            // left to trade, so expiry must be strictly after tradeDate.
+            if (!expiry.isAfter(tradeDate)) {
+                throw new IllegalStateException("expiry must be strictly after tradeDate");
             }
+
+            // Deliberately NOT checked here: expiry relative to LocalDate.now().
+            // A derivative whose expiry has already passed by "today" is still a
+            // valid historical record (e.g. backfilled or closed-out trades), so
+            // it must remain constructible — only its relation to tradeDate is
+            // validated above.
 
             return new DerivativeTrade(this);
         }
