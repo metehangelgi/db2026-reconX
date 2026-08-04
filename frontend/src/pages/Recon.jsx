@@ -1,5 +1,5 @@
 // TICKET-ADV068-070 (frontend) — trigger a recon run, view its results, resolve breaks.
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { withAuth } from '@components/withAuth.jsx';
 import DataTable from '@components/DataTable.jsx';
 import PageTopbar from '@components/PageTopbar.jsx';
@@ -268,7 +268,7 @@ function Recon() {
         </>
       )}
 
-      {jobId && !job && <p className="form-info">Click "Load results" to fetch this run's stats and breaks.</p>}
+      {jobId && !job && <p className="form-info">Click &ldquo;Load results&rdquo; to fetch this run&apos;s stats and breaks.</p>}
     </section>
   );
 }

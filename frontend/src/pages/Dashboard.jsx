@@ -40,11 +40,17 @@ function Dashboard() {
   const { trades: streamed, isConnected } = useTradeStream();
   const health = useSystemHealth();
 
+  // `?size=1000` caps how many rows we pull into the browser for the charts
+  // below — fine for volume trends / top-6 counterparty bars, which only
+  // ever need a bounded sample. `totalElements` is the *real* row count from
+  // the DB and is what "Total Trades" must use instead, or that stat freezes
+  // at 1000 forever once the table grows past the page size.
   const [historical, setHistorical] = useState([]);
+  const [historicalTotal, setHistoricalTotal] = useState(0);
   useEffect(() => {
     api.listTrades('?size=1000')
-      .then((res) => setHistorical(res.items))
-      .catch(() => setHistorical([]));
+      .then((res) => { setHistorical(res.items); setHistoricalTotal(res.totalElements); })
+      .catch(() => { setHistorical([]); setHistoricalTotal(0); });
   }, []);
 
   const trades = useMemo(() => {
@@ -52,6 +58,12 @@ function Dashboard() {
     for (const t of streamed) byRef.set(t.tradeRef, t); // live data wins on conflict
     return Array.from(byRef.values());
   }, [historical, streamed]);
+
+  const totalTradeCount = useMemo(() => {
+    const historicalRefs = new Set(historical.map((t) => t.tradeRef));
+    const newSinceLoad = streamed.filter((t) => !historicalRefs.has(t.tradeRef)).length;
+    return historicalTotal + newSinceLoad;
+  }, [historical, streamed, historicalTotal]);
 
   const portfolioValue = useMemo(
     () => trades.reduce((sum, t) => sum + t.quantity * t.price, 0),
@@ -110,7 +122,7 @@ function Dashboard() {
       <PageTopbar title="Operations Dashboard" subtitle="Real-time trade reconciliation overview" />
 
       <div className="stat-grid">
-        <StatCard label="Total Trades" value={trades.length} meta="Live + historical" />
+        <StatCard label="Total Trades" value={totalTradeCount.toLocaleString()} meta="Live + historical" />
         <StatCard
           label="Matched"
           value={matched}

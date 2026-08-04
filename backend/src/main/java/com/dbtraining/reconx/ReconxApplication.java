@@ -11,7 +11,8 @@ import org.springframework.scheduling.annotation.EnableAsync;
  *
  * <p>Activated capabilities:
  * <ul>
- *   <li>{@code @EnableJpaAuditing} — ADV050 @CreatedDate / @LastModifiedDate population, enabled in {@link com.dbtraining.reconx.config.JpaConfig}.</li>
+ *   <li>{@code @EnableJpaAuditing} — ADV050 @CreatedDate / @LastModifiedDate population,
+ *       enabled in {@link com.dbtraining.reconx.config.JpaConfig}.</li>
  *   <li>{@link EnableCaching}    — ADV081 @Cacheable on InstrumentService.</li>
  *   <li>{@link EnableKafka}      — ADV128–ADV133 Kafka producers and @KafkaListener consumers.</li>
  *   <li>{@link EnableAsync}      — ADV037 CompletableFuture-based parallel reconciliation.</li>

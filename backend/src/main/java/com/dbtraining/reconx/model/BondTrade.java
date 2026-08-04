@@ -107,8 +107,9 @@ public final class BondTrade extends Trade implements TradeType {
 
             // A bond maturing on its trade date has already redeemed with no
             // remaining life, so it must mature strictly after the trade date.
-            if (!maturityDate.isAfter(tradeDate))
+            if (!maturityDate.isAfter(tradeDate)) {
                 throw new IllegalStateException("maturityDate must be strictly after tradeDate");
+            }
 
             if (isin == null || isin.length() != 12) {
                 throw new IllegalStateException("ISIN must be exactly 12 characters");

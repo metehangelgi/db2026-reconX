@@ -31,5 +31,6 @@
     <include file="changes/014-resync-identity-sequences.xml"       relativeToChangelogFile="true"/>
     <include file="changes/015-recon-breaks-job-id.xml"             relativeToChangelogFile="true"/>
     <include file="changes/016-recon-breaks-priority.xml"           relativeToChangelogFile="true"/>
+    <include file="changes/017-fix-revinfo-seq.xml"                 relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

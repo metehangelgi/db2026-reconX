@@ -23,7 +23,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.Map;
 
-import static com.dbtraining.reconx.repository.TradeSpecifications.*;
+import static com.dbtraining.reconx.repository.TradeSpecifications.hasAssetClass;
+import static com.dbtraining.reconx.repository.TradeSpecifications.hasCounterparty;
+import static com.dbtraining.reconx.repository.TradeSpecifications.hasStatus;
+import static com.dbtraining.reconx.repository.TradeSpecifications.tradeDateBetween;
 
 /**
  * ============================================================================

@@ -38,6 +38,13 @@
         <jjwt.version>0.12.6</jjwt.version>
         <testcontainers.version>1.21.4</testcontainers.version>
         <hypersistence.version>3.9.0</hypersistence.version>
+
+        <!-- TICKET-ADV155 — liquibase-maven-plugin defaults match the local
+             dev Postgres (docker-compose.yml); CI overrides these three via
+             -D against its ephemeral service-container Postgres. -->
+        <liquibase.url>jdbc:postgresql://localhost:5432/reconx</liquibase.url>
+        <liquibase.username>reconx_user</liquibase.username>
+        <liquibase.password>reconx_pass</liquibase.password>
     </properties>
 
     <dependencies>
@@ -273,6 +280,41 @@
                                 </rule>
                             </rules>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- TICKET-ADV155 — `mvn liquibase:validate` catches pending changesets,
+                 checksum mismatches, and XML parse errors before tests run. -->
+            <plugin>
+                <groupId>org.liquibase</groupId>
+                <artifactId>liquibase-maven-plugin</artifactId>
+                <version>4.31.1</version>
+                <configuration>
+                    <changeLogFile>db/changelog/db.changelog-master.xml</changeLogFile>
+                    <url>${liquibase.url}</url>
+                    <username>${liquibase.username}</username>
+                    <password>${liquibase.password}</password>
+                </configuration>
+            </plugin>
+
+            <!-- TICKET-ADV157 — Checkstyle, bound to `validate` so style/structural
+                 violations fail fast, before tests even compile. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.6.0</version>
+                <configuration>
+                    <configLocation>checkstyle.xml</configLocation>
+                    <suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
+                    <failOnViolation>true</failOnViolation>
+                    <violationSeverity>warning</violationSeverity>
+                    <consoleOutput>true</consoleOutput>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals><goal>check</goal></goals>
                     </execution>
                 </executions>
             </plugin>

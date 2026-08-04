@@ -165,7 +165,7 @@ body {
 }
 .sidebar__logout:hover { background: var(--color-sidebar-hover); opacity: 1; box-shadow: none; }
 
-.content { flex: 1; margin-left: var(--sidebar-width); padding: var(--space-6); max-width: 1500px; }
+.content { flex: 1; min-width: 0; margin-left: var(--sidebar-width); padding: var(--space-6); max-width: 1500px; }
 
 @media (max-width: 900px) {
   .mobile-toggle { display: flex; }
@@ -243,6 +243,7 @@ section { display: flex; flex-direction: column; gap: var(--space-5); }
    ------------------------------------------------------------------------ */
 .chart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-4); }
 .chart-card {
+  min-width: 0;
   background: var(--color-card);
   border-radius: var(--radius-lg);
   padding: var(--space-5);

@@ -19,7 +19,7 @@ vi.mock('@hooks/useTradeStream.js', () => ({
 // something streams in) — stub that out to isolate this test to the SSE data.
 vi.mock('@services/apiService.js', () => ({
   api: {
-    listTrades: () => Promise.resolve({ items: [] }),
+    listTrades: () => Promise.resolve({ items: [], totalElements: 0 }),
     health: () => Promise.resolve({ components: { reconxDatabase: { status: 'UP' }, kafka: { status: 'UP' } } }),
   },
 }));

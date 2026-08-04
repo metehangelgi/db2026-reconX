@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+  TICKET-ADV157 — pragmatic Checkstyle ruleset.
+
+  Started from Google's checks and pruned the rules that fight this
+  codebase's actual (legitimate) conventions instead of catching real bugs:
+  4-space indentation, one-line accessors/short methods, block-comment
+  documentation (WHAT/HOW/WHY/OBSERVE headers) instead of per-method Javadoc,
+  grouped-but-not-alphabetized imports, and the column-aligned
+  `field = v; return this;` / `Type a, b;` idiom the Builder inner classes in
+  model/*Trade.java use consistently (OneStatementPerLine and
+  MultipleVariableDeclarations would otherwise flag that pattern everywhere).
+  What's left targets genuine correctness/readability risk: star imports,
+  unused imports, missing braces on multi-line conditionals, equals/hashCode
+  pairing, and basic whitespace/naming sanity.
+-->
+<module name="Checker">
+  <property name="severity" value="warning"/>
+  <property name="charset" value="UTF-8"/>
+
+  <module name="LineLength">
+    <property name="max" value="140"/>
+    <property name="ignorePattern" value="^import\s.*$"/>
+  </module>
+  <module name="FileTabCharacter"/>
+
+  <module name="TreeWalker">
+    <!-- Imports -->
+    <module name="AvoidStarImport"/>
+    <module name="RedundantImport"/>
+    <module name="UnusedImports"/>
+
+    <!-- Correctness / readability, not formatting -->
+    <module name="EqualsHashCode"/>
+    <module name="SimplifyBooleanExpression"/>
+    <module name="SimplifyBooleanReturn"/>
+    <module name="EmptyStatement"/>
+    <module name="NeedBraces">
+      <!-- Allow the codebase's single-line `if (x) return;` style; still
+           require braces once a body spans multiple lines. -->
+      <property name="allowSingleLineStatement" value="true"/>
+    </module>
+
+    <!-- Naming — relaxed enough for short conventional Java names (id, db). -->
+    <module name="MethodName"/>
+    <module name="LocalVariableName"/>
+    <module name="MemberName"/>
+    <module name="ParameterName"/>
+
+    <!-- Whitespace sanity -->
+    <module name="WhitespaceAfter">
+      <property name="tokens" value="COMMA, SEMI"/>
+    </module>
+    <module name="GenericWhitespace"/>
+  </module>
+</module>

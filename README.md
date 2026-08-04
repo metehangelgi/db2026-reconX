@@ -233,6 +233,36 @@ Full walkthrough: [`student-guides/day10/README.md`](./student-guides/day10/READ
 
 ---
 
+## Monitoring
+
+Three Grafana screenshots of the same panel (**API request rate by
+endpoint**), captured via Grafana's "Direct link rendered image" during a
+real `k6` run (`loadtest/trade-creation.js`: 200 VUs, 2 minutes, hitting
+`POST /api/v1/trades`) — proof the stack survives 200 concurrent users, not
+just a claim.
+
+![Baseline — idle stack, ~0.1 req/s from actuator/prometheus scraping only](docs/screenshots/grafana-baseline.png)
+
+![Under load — 200 VUs, request rate climbs to ~385 req/s on /v1/trades](docs/screenshots/grafana-under-load.png)
+
+![Recovery — request rate back to baseline within ~30s of k6 stopping](docs/screenshots/grafana-recovery.png)
+
+**Result:** 46,447 requests, 0.00% `http_req_failed`, p95 latency 55 ms
+(threshold was <800 ms), p99 93 ms (threshold was <2000 ms) — comfortable
+headroom above 200 concurrent users. Full run output:
+[`loadtest/results/run.log`](loadtest/results/run.log) /
+[`loadtest/results/summary.json`](loadtest/results/summary.json).
+
+Reproduce it yourself:
+
+```bash
+docker compose up -d
+docker compose --profile debug up -d renderer   # only needed for screenshots
+BASE_URL=http://localhost:8080 k6 run loadtest/trade-creation.js
+```
+
+---
+
 ## API versioning
 
 Every live controller is mounted under `/api/v1/...` — the version is part of the URL, not a header, so it's visible in logs and impossible for a client to omit by accident. When a breaking change is needed, the old version keeps responding under its own prefix (see `/v0/trades` in `DeprecatedApiController`) with `410 Gone` plus `Deprecation`/`Sunset`/`Link` headers, instead of a bare 404 — this gives clients a machine-readable signal and a pointer to the successor endpoint well before the sunset date.
@@ -314,6 +344,15 @@ A 20-minute end-to-end walkthrough:
 | 8       | Live demo: JWT login → post trade → Kafka event → auto-recon → resolve break → Grafana metric ticks |
 | 5       | Code walkthrough (one feature each team member is proud of) |
 | 4       | Q&A |
+
+---
+
+## Team
+
+See [`docs/retrospective.md`](docs/retrospective.md) for the full team
+roster (lead / backend / frontend / DevOps-CI) and the Day-10 close-out
+retrospective. Demo materials: [`docs/demo-deck-outline.md`](docs/demo-deck-outline.md)
+and [`docs/demo-runsheet.md`](docs/demo-runsheet.md).
 
 ---
 

@@ -76,16 +76,16 @@ public class SecurityConfig {
           .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
           .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
           .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/auth/login","/actuator/health/**","/actuator/info",
-                             "/actuator/prometheus","/swagger-ui.html","/swagger-ui/**",
-                             "/v3/api-docs/**","/h2/**","/v0/**").permitAll()
-            .requestMatchers(HttpMethod.GET,    "/v1/trades/**").hasAnyRole("VIEWER","TRADER","RECON_ANALYST","ADMIN")
-            .requestMatchers(HttpMethod.POST,   "/v1/trades").hasAnyRole("TRADER","ADMIN")
-            .requestMatchers(HttpMethod.PUT,    "/v1/trades/**").hasAnyRole("TRADER","ADMIN")
-            .requestMatchers(HttpMethod.PATCH,  "/v1/trades/**").hasAnyRole("TRADER","ADMIN")
+            .requestMatchers("/auth/login", "/actuator/health/**", "/actuator/info",
+                             "/actuator/prometheus", "/swagger-ui.html", "/swagger-ui/**",
+                             "/v3/api-docs/**", "/h2/**", "/v0/**").permitAll()
+            .requestMatchers(HttpMethod.GET,    "/v1/trades/**").hasAnyRole("VIEWER", "TRADER", "RECON_ANALYST", "ADMIN")
+            .requestMatchers(HttpMethod.POST,   "/v1/trades").hasAnyRole("TRADER", "ADMIN")
+            .requestMatchers(HttpMethod.PUT,    "/v1/trades/**").hasAnyRole("TRADER", "ADMIN")
+            .requestMatchers(HttpMethod.PATCH,  "/v1/trades/**").hasAnyRole("TRADER", "ADMIN")
             .requestMatchers(HttpMethod.DELETE, "/v1/trades/**").hasRole("ADMIN")
-            .requestMatchers("/v1/recon/**").hasAnyRole("RECON_ANALYST","ADMIN")
-            .requestMatchers("/v1/audit/**").hasAnyRole("RECON_ANALYST","ADMIN")
+            .requestMatchers("/v1/recon/**").hasAnyRole("RECON_ANALYST", "ADMIN")
+            .requestMatchers("/v1/audit/**").hasAnyRole("RECON_ANALYST", "ADMIN")
             .anyRequest().authenticated())
           .headers(h -> h.frameOptions(f -> f.disable()))
           .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

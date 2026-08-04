@@ -38,10 +38,10 @@ import org.springframework.util.backoff.ExponentialBackOff;
 public class KafkaErrorHandlerConfig {
 
     @Bean
-    public DefaultErrorHandler errorHandler(KafkaTemplate<Object,Object> template) {
+    public DefaultErrorHandler errorHandler(KafkaTemplate<Object, Object> template) {
         DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(
             template,
-            (ConsumerRecord<?,?> rec, Exception ex) ->
+            (ConsumerRecord<?, ?> rec, Exception ex) ->
                 new TopicPartition(rec.topic() + "-dlq", rec.partition()));
         ExponentialBackOff backoff = new ExponentialBackOff(1000L, 2.0);
         backoff.setMaxAttempts(3);

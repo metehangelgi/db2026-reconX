@@ -72,13 +72,37 @@ function Trades() {
   const [modal, setModal] = useState(null); // { mode: 'view'|'edit', trade }
   const [importSummary, setImportSummary] = useState(null);
 
-  // A separate, larger, unfiltered fetch backs the KPI/summary numbers so
-  // they reflect the whole book, not just the current paginated/filtered page.
+  // A separate, larger, unfiltered fetch backs the "Trade Value" KPI so it
+  // at least samples the whole book rather than just the current paginated/
+  // filtered page — though past `size=1000` rows it's a sample, not the true
+  // sum, since summing 90k+ rows in the browser isn't reasonable. Counts
+  // (below) don't have this problem: Spring Data's totalElements comes from
+  // a COUNT query, so `?status=X&size=1` gets an exact count for ~nothing.
   const [allTrades, setAllTrades] = useState([]);
   const loadAllTrades = useCallback(() => {
     api.listTrades('?size=1000').then((res) => setAllTrades(res.items)).catch(() => setAllTrades([]));
   }, []);
   useEffect(loadAllTrades, [loadAllTrades]);
+
+  const [statusCounts, setStatusCounts] = useState({ total: 0, confirmed: 0, settled: 0, pending: 0, cancelled: 0 });
+  const loadStatusCounts = useCallback(() => {
+    Promise.all([
+      api.listTrades('?size=1'),
+      api.listTrades('?status=CONFIRMED&size=1'),
+      api.listTrades('?status=SETTLED&size=1'),
+      api.listTrades('?status=PENDING&size=1'),
+      api.listTrades('?status=CANCELLED&size=1'),
+    ]).then(([total, confirmed, settled, pending, cancelled]) => {
+      setStatusCounts({
+        total: total.totalElements,
+        confirmed: confirmed.totalElements,
+        settled: settled.totalElements,
+        pending: pending.totalElements,
+        cancelled: cancelled.totalElements,
+      });
+    }).catch(() => setStatusCounts({ total: 0, confirmed: 0, settled: 0, pending: 0, cancelled: 0 }));
+  }, []);
+  useEffect(loadStatusCounts, [loadStatusCounts]);
 
   const loadPage = useCallback(() => {
     const params = new URLSearchParams({ page: String(page) });
@@ -90,17 +114,18 @@ function Trades() {
   }, [page, statusFilter, assetClassFilter]);
   useEffect(loadPage, [loadPage]);
 
-  function refreshAll() {
+  const refreshAll = useCallback(() => {
     loadPage();
     loadAllTrades();
-  }
+    loadStatusCounts();
+  }, [loadPage, loadAllTrades, loadStatusCounts]);
 
   const handleSortChange = useCallback((key) => {
     setSortDir((prevDir) => (sortKey === key ? (prevDir === 'asc' ? 'desc' : 'asc') : 'asc'));
     setSortKey(key);
   }, [sortKey]);
 
-  async function handleDelete(id) {
+  const handleDelete = useCallback(async (id) => {
     if (!window.confirm('Delete this trade? This cannot be undone from here.')) return;
     setDeletingId(id);
     try {
@@ -111,7 +136,7 @@ function Trades() {
     } finally {
       setDeletingId(null);
     }
-  }
+  }, [refreshAll]);
 
   function handleExport() {
     downloadCsv('trades-export.csv', visibleItems, [
@@ -217,33 +242,39 @@ function Trades() {
         )}
       </span>
     </>
-  ), [canDelete, canEdit, deletingId]);
+  ), [canDelete, canEdit, deletingId, handleDelete]);
 
-  const kpis = useMemo(() => {
-    let matched = 0, pending = 0, breaks = 0, value = 0;
-    for (const t of allTrades) {
-      value += t.quantity * t.price;
-      if (t.status === 'CONFIRMED' || t.status === 'SETTLED') matched++;
-      else if (t.status === 'PENDING') pending++;
-      else if (t.status === 'CANCELLED') breaks++;
-    }
-    return { total: allTrades.length, matched, pending, breaks, value };
-  }, [allTrades]);
+  const tradeValueSample = useMemo(
+    () => allTrades.reduce((sum, t) => sum + t.quantity * t.price, 0),
+    [allTrades]
+  );
+
+  const kpis = useMemo(() => ({
+    total:   statusCounts.total,
+    matched: statusCounts.confirmed + statusCounts.settled,
+    pending: statusCounts.pending,
+    breaks:  statusCounts.cancelled,
+    value:   tradeValueSample,
+  }), [statusCounts, tradeValueSample]);
 
   return (
     <section>
       <PageTopbar title="Trading Dashboard" subtitle="Front office trade blotter" />
 
       <div className="kpi-grid">
-        <article className="stat-card"><h3>Total Trades</h3><p>{kpis.total}</p></article>
-        <article className="stat-card"><h3>Matched</h3><p>{kpis.matched}</p>
+        <article className="stat-card"><h3>Total Trades</h3><p>{kpis.total.toLocaleString()}</p></article>
+        <article className="stat-card"><h3>Matched</h3><p>{kpis.matched.toLocaleString()}</p>
           <span className="stat-card__meta">{kpis.total ? `${((kpis.matched / kpis.total) * 100).toFixed(0)}%` : '—'}</span>
         </article>
-        <article className="stat-card"><h3>Pending</h3><p>{kpis.pending}</p></article>
-        <article className="stat-card"><h3>Breaks</h3><p>{kpis.breaks}</p>
+        <article className="stat-card"><h3>Pending</h3><p>{kpis.pending.toLocaleString()}</p></article>
+        <article className="stat-card"><h3>Breaks</h3><p>{kpis.breaks.toLocaleString()}</p>
           {kpis.breaks > 0 && <span className="stat-card__meta stat-card__meta--warn">Needs investigation</span>}
         </article>
-        <article className="stat-card"><h3>Trade Value</h3><p>{kpis.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p></article>
+        <article className="stat-card"><h3>Trade Value</h3><p>{kpis.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+          {kpis.total > allTrades.length && (
+            <span className="stat-card__meta">first {allTrades.length.toLocaleString()} of {kpis.total.toLocaleString()} trades</span>
+          )}
+        </article>
       </div>
 
       <div className="toolbar-card">
