@@ -59,8 +59,14 @@ jobs:
 
       - name: Liquibase validate
         working-directory: backend
+        # `process-resources` first: on a clean checkout target/classes doesn't
+        # exist yet, and liquibase-maven-plugin's search path for changeLogFile
+        # only includes it (not raw src/main/resources) — invoking the bare
+        # `validate` goal on its own fails with ChangeLogParseException: file
+        # not found, even though the changelog is fine. Confirmed by
+        # reproducing locally with `rm -rf target && ./mvnw liquibase:validate`.
         run: >-
-          ./mvnw -B liquibase:validate
+          ./mvnw -B process-resources liquibase:validate
           -Dliquibase.url=jdbc:postgresql://localhost:5432/reconx_test
           -Dliquibase.username=test
           -Dliquibase.password=test
