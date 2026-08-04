@@ -1,11 +1,14 @@
-<changeSet id="011-mv-daily-recon-summary" author="jo">
-    <sql>
-        REFRESH MATERIALIZED VIEW CONCURRENTLY mv_daily_recon_summary;
-    </sql>
-</changeSet>
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
 
-<changeSet id="002-tag-day1-complete" author="Jo">
-        <tagDatabase tag="day1-complete"/>
-        <rollback>
-        </rollback>
-</changeSet>
+    <changeSet id="011-mv-daily-recon-summary" author="jo">
+        <sql dbms="postgresql">
+            REFRESH MATERIALIZED VIEW CONCURRENTLY mv_daily_recon_summary;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

@@ -26,6 +26,11 @@
     <include file="changes/007-users-rbac.xml"    relativeToChangelogFile="true"/>
     <include file="changes/008-seed.xml"          relativeToChangelogFile="true"/>
     <include file="changes/011-mv-daily-recon-summary.xml"          relativeToChangelogFile="true"/>
-
+    <include file="changes/012-recon-results.xml"                   relativeToChangelogFile="true"/>
+    <include file="changes/013-envers.xml"                          relativeToChangelogFile="true"/>
+    <include file="changes/014-resync-identity-sequences.xml"       relativeToChangelogFile="true"/>
+    <include file="changes/015-recon-breaks-job-id.xml"             relativeToChangelogFile="true"/>
+    <include file="changes/016-recon-breaks-priority.xml"           relativeToChangelogFile="true"/>
+    <include file="changes/017-fix-revinfo-seq.xml"                 relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

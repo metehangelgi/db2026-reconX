@@ -23,11 +23,13 @@ class TradeTypeOrderingTest {
         trades.add(oldest);
         trades.add(derivative);
 
+        // Same tradeDate (2026-06-03) for `newest` (EQU-...) and `derivative`
+        // (DVT-...) is broken by ascending tradeRef: "DVT..." < "EQU...".
         assertThat(trades)
-                .containsExactly(newest, derivative, middle, oldest);
+                .containsExactly(derivative, newest, middle, oldest);
 
-        assertThat(newest.compareTo(derivative)).isLessThan(0);
-        assertThat(derivative.compareTo(newest)).isGreaterThan(0);
+        assertThat(newest.compareTo(derivative)).isGreaterThan(0);
+        assertThat(derivative.compareTo(newest)).isLessThan(0);
 
         assertThat(newest.compareTo(newest)).isZero();
     }

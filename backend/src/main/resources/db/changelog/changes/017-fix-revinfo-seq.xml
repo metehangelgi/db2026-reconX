@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ============================================================================
+ TICKET-ADV052 follow-up — missing revinfo_seq sequence
+ WHAT:    013-envers.xml created `revinfo.rev` as an autoIncrement (SERIAL)
+          column, backed by Postgres' own implicit sequence. Hibernate
+          Envers' DefaultRevisionEntity generates `rev` via an explicit
+          sequence named `revinfo_seq` (org.hibernate.envers.enhanced.
+          OrderedSequenceGenerator), which was never created.
+ HOW:     Create the sequence Envers expects, started well above the highest
+          `rev` already issued via the SERIAL default (24 at last check) so
+          the two numbering sources never collide. CREATE SEQUENCE START WITH
+          requires a literal, not a subquery, so a generous fixed offset
+          (1000) is used instead of computing MAX(rev)+1 dynamically.
+ WHY:     ddl-auto=validate fails fast on Postgres with "missing sequence
+          [revinfo_seq]" — H2's schema validator doesn't detect the same
+          gap, which is why this only surfaced once running against
+          Postgres (uat profile) instead of the dev/H2 profile.
+ ============================================================================
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="017-create-revinfo-seq-postgres" author="trainer" dbms="postgresql">
+        <sql>CREATE SEQUENCE IF NOT EXISTS revinfo_seq START WITH 1000 INCREMENT BY 1;</sql>
+        <rollback>
+            <sql>DROP SEQUENCE IF EXISTS revinfo_seq;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="017-create-revinfo-seq-h2" author="trainer" dbms="h2">
+        <sql>CREATE SEQUENCE IF NOT EXISTS revinfo_seq START WITH 1000 INCREMENT BY 1;</sql>
+        <rollback>
+            <sql>DROP SEQUENCE IF EXISTS revinfo_seq;</sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Envers' OrderedSequenceGenerator pools ids 50 at a time (increment_size=50
+         baked into DefaultRevisionEntity's @GenericGenerator); the sequence above
+         was created with INCREMENT BY 1, which Hibernate refuses to accept:
+         "increment size of the [revinfo_seq] sequence is set to [50] in the
+         entity mapping while the associated database sequence increment size is [1]." -->
+    <changeSet id="017b-fix-revinfo-seq-increment-postgres" author="trainer" dbms="postgresql">
+        <sql>ALTER SEQUENCE revinfo_seq INCREMENT BY 50;</sql>
+        <rollback>
+            <sql>ALTER SEQUENCE revinfo_seq INCREMENT BY 1;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="017b-fix-revinfo-seq-increment-h2" author="trainer" dbms="h2">
+        <sql>ALTER SEQUENCE revinfo_seq INCREMENT BY 50;</sql>
+        <rollback>
+            <sql>ALTER SEQUENCE revinfo_seq INCREMENT BY 1;</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

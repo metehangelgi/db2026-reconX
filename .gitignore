@@ -1,6 +1,7 @@
 # Maven build output
 backend/target/
 backend/.mvn/wrapper/maven-wrapper.jar
+recon-audit-starter/target/
 frontend/node_modules/
 frontend/dist/
 
@@ -30,6 +31,8 @@ dist/
 # Logs
 *.log
 logs/
+# ...except the committed k6 load-test run this repo's README/deck reference (TICKET-ADV158/159).
+!loadtest/results/run.log
 
 # Environment
 .env

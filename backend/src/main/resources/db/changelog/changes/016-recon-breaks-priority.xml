@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ============================================================================
+ recon_breaks.priority — HIGH/MEDIUM/LOW, computed by ReconJobRunner at
+ detection time (cancelled trades are HIGH; pending trades unconfirmed for
+ more than 3 days are MEDIUM; everything else LOW). Real, computed data —
+ not a placeholder — added to support filtering/sorting on the
+ Reconciliation page.
+ ============================================================================
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="016-recon-breaks-add-priority" author="reconx-team">
+        <addColumn tableName="recon_breaks">
+            <column name="priority" type="VARCHAR(10)" defaultValue="LOW">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="recon_breaks" columnName="priority"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -13,15 +13,21 @@ export default function Login() {
 
   async function submit(e) {
     e.preventDefault();
-    // TODO(TICKET-ADV072):
-    //   1. call api.login(email, password) — it returns { token, role }.
-    //   2. on success: call login(token, role) from AuthContext, then
-    //      navigate('/').
-    //   3. on failure: setError(err.message) so the alert div renders.
+    try {
+      const { token, role } = await api.login(email, password);
+      login(token, role, email);
+      navigate('/');
+    } catch (err) {
+      setError(err.message);
+    }
   }
 
   return (
     <form onSubmit={submit} className="login-form">
+      <div className="auth-shell__brand">
+        <div className="auth-shell__logo" aria-hidden="true">R</div>
+        <span className="auth-shell__title">ReconX</span>
+      </div>
       <h2>Sign in</h2>
       <label>
         Email

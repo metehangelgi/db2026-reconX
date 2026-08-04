@@ -19,5 +19,6 @@ public record TradeResponse(
         LocalDate tradeDate,
         String status,
         Instant createdAt,
-        Instant modifiedAt
+        Instant modifiedAt,
+        String isin
 ) {}

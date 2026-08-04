@@ -32,11 +32,19 @@ public enum ReconciliationRule {
         this.qtyToleranceAbs   = qtyToleranceAbs;
     }
 
+    /** @return the maximum allowed price divergence, expressed as a fraction (e.g. {@code 0.01} = 1%). */
     public BigDecimal priceTolerancePct() { return priceTolerancePct; }
+
+    /** @return the maximum allowed absolute quantity divergence. */
     public BigDecimal qtyToleranceAbs()   { return qtyToleranceAbs; }
 
     /**
-     * Decide whether two prices/quantities are within this rule's tolerance.
+     * Decides whether two prices/quantities are within this rule's tolerance.
+     *
+     * @param internalPrice the internally-booked price
+     * @param internalQty   the internally-booked quantity
+     * @param externalPrice the counterparty/external price to compare against
+     * @param externalQty   the counterparty/external quantity to compare against
      * @return true if BOTH the price diff (as %) AND the qty diff (as abs)
      *         are within tolerance.
      */

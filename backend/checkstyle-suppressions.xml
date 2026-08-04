@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+    "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+    "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+<suppressions>
+    <!-- TICKET-ADV157 — no per-file suppressions needed: the 76 violations
+         found against the initial ruleset were either fixed directly (star
+         imports expanded, missing braces added, whitespace/unused-import
+         cleanup) or the rule itself was pruned from checkstyle.xml with a
+         comment explaining why (see that file's header). Kept as an empty,
+         wired-up file so a future genuine exception has a documented home
+         instead of the plugin being disabled outright. -->
+</suppressions>

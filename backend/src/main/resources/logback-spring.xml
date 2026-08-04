@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================================
+  TICKET-ADV061 — Structured logging with MDC / correlation id
+
+  WHAT:    Two <springProfile> blocks: `dev` uses a plain, human-readable
+           console pattern that includes the MDC correlationId/tradeRef; the
+           `uat,prod` profile uses net.logstash.logback.encoder.LogstashEncoder
+           to emit structured JSON with MDC fields included automatically.
+  HOW:     Paired with com.dbtraining.reconx.observability.MdcFilter, which
+           puts `correlationId` (and optionally `tradeRef`) into MDC per
+           request and clears it in a finally block.
+  OBSERVE: `curl -H "X-Correlation-Id: foo-123" http://localhost:8080/api/v1/trades`
+           under SPRING_PROFILES_ACTIVE=dev logs `... foo-123 ...` on every
+           line for that request; under `uat`/`prod` the same request emits
+           JSON lines with `"correlationId":"foo-123"` and `"service":"reconx-api"`.
+  ============================================================================
+-->
+<configuration>
+
+    <springProfile name="dev">
+        <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %X{correlationId:-} %X{tradeRef:-} %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <springProfile name="uat,prod">
+        <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <includeMdc>true</includeMdc>
+                <customFields>{"service":"reconx-api"}</customFields>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+
+</configuration>

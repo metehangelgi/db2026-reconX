@@ -49,6 +49,21 @@ class FXTradeTest {
     }
 
     @Test
+    void builder_nonPositiveNotionalCcy1_throwsOnBuild() {
+        assertThatThrownBy(() -> FXTrade.builder()
+                .tradeRef(TradeRef.of("FXT-20260603-0001"))
+                .ccy1("EUR").ccy2("USD")
+                .notionalCcy1(BigDecimal.ZERO)
+                .fxRate(new BigDecimal("1.1"))
+                .side(Side.BUY)
+                .tradeDate(LocalDate.of(2026, 6, 3))
+                .counterpartyId(1L)
+                .build())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("notionalCcy1 must be > 0");
+    }
+
+    @Test
     void builder_missingTradeRef_throws() {
         assertThatThrownBy(() -> FXTrade.builder()
                 .ccy1("EUR").ccy2("USD")

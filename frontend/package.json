@@ -12,11 +12,13 @@
     "lint": "eslint src --max-warnings 0"
   },
   "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-router-dom": "^7.0.0",
-    "react-hook-form": "^7.53.0",
     "@hookform/resolvers": "^3.9.0",
+    "chart.js": "^4.5.1",
+    "react": "^19.0.0",
+    "react-chartjs-2": "^5.3.1",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.53.0",
+    "react-router-dom": "^7.0.0",
     "yup": "^1.4.0"
   },
   "devDependencies": {

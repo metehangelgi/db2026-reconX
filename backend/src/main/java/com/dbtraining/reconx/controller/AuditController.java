@@ -5,9 +5,12 @@ import com.dbtraining.reconx.repository.entity.AuditLogEntry;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -18,6 +21,7 @@ import java.util.List;
 @RequestMapping("/v1/audit")
 @Tag(name = "audit")
 @SecurityRequirement(name = "bearerAuth")
+@PreAuthorize("hasAnyRole('ADMIN','RECON_ANALYST')")
 public class AuditController {
 
     private final AuditLogRepository auditRepo;
@@ -27,17 +31,12 @@ public class AuditController {
     @GetMapping("/trades/{tradeRef}")
     @Operation(summary = "Get audit history for a trade (by tradeRef)")
     public List<AuditLogEntry> history(@PathVariable String tradeRef) {
-        // TODO(TICKET-ADV071): return auditRepo.findByTradeRefOrderByEventTimestampAsc(tradeRef).
-        //   Day-0 returns an empty list so the React audit-trail panel renders
-        //   "no history yet" instead of erroring.
-        return Collections.emptyList();
+        return auditRepo.findByTradeRefOrderByEventTimestampAsc(tradeRef);
     }
 
     @GetMapping("/trades/{tradeRef}/events")
     @Operation(summary = "Stream of all Kafka-sourced events for a trade")
     public List<AuditLogEntry> events(@PathVariable String tradeRef) {
-        // TODO(TICKET-ADV138): once the audit-log Kafka consumer is in place,
-        //   return auditRepo.findByTradeRefOrderByEventTimestampAsc(tradeRef).
-        return Collections.emptyList();
+        return auditRepo.findByTradeRefOrderByEventTimestampAsc(tradeRef);
     }
 }

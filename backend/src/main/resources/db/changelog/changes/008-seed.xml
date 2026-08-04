@@ -75,14 +75,12 @@
     </changeSet>
 
     <changeSet id="008-seed-data" author="reconx-team" context="dev,test">
+        <!-- Guards against re-seeding trades on a second run; counterparties/instruments
+             are already guaranteed non-empty by the CSV loaders above in this same file,
+             so gating on their count here would (and did) permanently skip this changeset. -->
         <preConditions onFail="MARK_RAN">
             <dbms type="postgresql"/>
-            <sqlCheck expectedResult="0">
-                SELECT
-                    (SELECT COUNT(*) FROM counterparties)
-                  + (SELECT COUNT(*) FROM instruments)
-                  + (SELECT COUNT(*) FROM trades)
-            </sqlCheck>
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM trades</sqlCheck>
         </preConditions>
         <sqlFile
                 path="data/seed_data.sql"
@@ -92,8 +90,6 @@
         <rollback>
             <sql>
                 DELETE FROM trades;
-                DELETE FROM instruments;
-                DELETE FROM counterparties;
             </sql>
         </rollback>
     </changeSet>

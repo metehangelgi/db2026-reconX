@@ -10,6 +10,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -33,6 +35,10 @@ import java.util.stream.Collectors;
  */
 @Service
 public class ReconciliationEngine {
+
+    /** TICKET-ADV037 — owned, bounded pool so per-counterparty work never runs on the JVM-wide common pool. */
+    private final ExecutorService reconExecutor =
+            Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
     @Timed(value = "reconciliation.duration", description = "Wall time of reconcile()",
            percentiles = {0.5, 0.95, 0.99}, histogram = true)
@@ -63,13 +69,18 @@ public class ReconciliationEngine {
                 .map(e -> CompletableFuture.supplyAsync(() -> reconcile(
                         e.getValue(),
                         externalByCp.getOrDefault(e.getKey(), List.of()),
-                        rule)))
+                        rule), reconExecutor))
                 .toList();
 
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
                 .thenApply(v -> futures.stream()
                         .flatMap(f -> f.join().stream())
                         .toList());
+    }
+
+    /** TICKET-ADV037 — release the owned executor's threads when the engine is no longer needed. */
+    public void shutdown() {
+        reconExecutor.shutdown();
     }
 
     private ReconResult matchOne(TradeType internal, TradeType external, ReconciliationRule rule) {

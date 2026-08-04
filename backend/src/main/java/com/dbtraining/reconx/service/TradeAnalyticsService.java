@@ -25,11 +25,15 @@ public class TradeAnalyticsService {
 
     /** TICKET-ADV034 — count + sum of notional per counterparty. */
     public Map<Long, NotionalSummary> notionalByCounterparty(List<? extends TradeType> trades) {
-        // TODO(TICKET-ADV034): Collectors.groupingBy(this::counterpartyIdOf,
-        //   Collectors.collectingAndThen(toList(), list -> new NotionalSummary(
-        //       list.size(),
-        //       list.stream().map(t -> t.notional().amount()).reduce(ZERO, BigDecimal::add)))).
-        throw new UnsupportedOperationException("TICKET-ADV034");
+        return trades.stream().collect(Collectors.groupingBy(
+                this::counterpartyIdOf,
+                Collectors.collectingAndThen(
+                        Collectors.toList(),
+                        list -> new NotionalSummary(
+                                list.size(),
+                                list.stream()
+                                        .map(t -> t.notional().amount())
+                                        .reduce(BigDecimal.ZERO, BigDecimal::add)))));
     }
 
     /**

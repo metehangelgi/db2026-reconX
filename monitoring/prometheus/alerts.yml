@@ -21,11 +21,13 @@ groups:
           severity: warning
         annotations:
           summary: "P95 request latency > 500ms for 3 min on {{ $labels.uri }}"
+          description: "Current P95: {{ $value }}s on {{ $labels.uri }}"
 
-      - alert: KafkaDlqGrowing
-        expr: increase(kafka_consumer_records_consumed_total{topic="trade-events-dlq"}[5m]) > 0
+      - alert: KafkaDlqMessages
+        expr: sum(kafka_consumer_records_consumed_total{topic="trade-events-dlq"}) > 0
         for: 1m
         labels:
           severity: critical
         annotations:
           summary: "Messages landing in trade-events-dlq"
+          description: "{{ $value }} message(s) in trade-events-dlq — see /api/v1/admin/dlq"

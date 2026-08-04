@@ -1,6 +1,11 @@
 package com.dbtraining.reconx.repository.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.Instant;
 
 /**
@@ -33,12 +38,10 @@ public class AuditLogEntry {
     // No @Lob — Hibernate 6 + Postgres treats @Lob String as OID column,
     // but Liquibase translates CLOB to TEXT. columnDefinition keeps both DBs
     // happy (H2 accepts TEXT in Postgres mode, Postgres uses it natively).
-    @Lob
-    @Column(name = "before_state")
+    @Column(name = "before_state", columnDefinition = "TEXT")
     private String beforeState;
 
-    @Lob
-    @Column(name = "after_state")
+    @Column(name = "after_state", columnDefinition = "TEXT")
     private String afterState;
 
     public AuditLogEntry() {}

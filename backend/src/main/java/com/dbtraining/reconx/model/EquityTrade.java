@@ -23,40 +23,29 @@ import java.util.Objects;
  * TICKET-ADV028 — equals/hashCode from tradeRef (Object methods on a regular class)
  * TICKET-ADV030 — toString() omits PII, prints reference/symbol/qty/price/side
  */
-public final class EquityTrade implements TradeType {
+public final class EquityTrade extends Trade implements TradeType {
 
-    private final TradeRef tradeRef;
     private final String instrumentSymbol;
     private final BigDecimal quantity;
     private final BigDecimal price;
     private final Currency currency;
     private final Side side;
-    private final LocalDate tradeDate;
     private final long counterpartyId;
 
+    /** Notional = quantity * price in the trade currency. */
     private EquityTrade(Builder b) {
-        this.tradeRef         = b.tradeRef;
+        super(b.tradeRef, new Money(b.quantity.multiply(b.price), b.currency), b.tradeDate);
         this.instrumentSymbol = b.instrumentSymbol;
         this.quantity         = b.quantity;
         this.price            = b.price;
         this.currency         = b.currency;
         this.side             = b.side;
-        this.tradeDate        = b.tradeDate;
         this.counterpartyId   = b.counterpartyId;
     }
 
     public static Builder builder() { return new Builder(); }
 
-    @Override public TradeRef tradeRef()    { return tradeRef; }
-    @Override public LocalDate tradeDate()  { return tradeDate; }
     @Override public AssetClass assetClass(){ return AssetClass.EQUITY; }
-
-    /** Notional = quantity * price in the trade currency. */
-    @Override public Money notional() {
-        // TODO(TICKET-ADV019): return new Money(quantity * price, currency).
-        BigDecimal notionalAmount = quantity.multiply(price);
-        return new Money(notionalAmount, currency);
-    }
 
     public String instrumentSymbol() { return instrumentSymbol; }
     public BigDecimal quantity()     { return quantity; }
@@ -68,17 +57,17 @@ public final class EquityTrade implements TradeType {
     /** equals: two EquityTrades are equal iff their tradeRef is equal. */
     @Override
     public boolean equals(Object o) {
-        return (o instanceof EquityTrade other) && tradeRef.equals(other.tradeRef);
+        return (o instanceof EquityTrade other) && tradeRef().equals(other.tradeRef());
     }
 
-    @Override public int hashCode() { return tradeRef.hashCode(); }
+    @Override public int hashCode() { return tradeRef().hashCode(); }
 
     @Override
     public String toString() {
         // NOTE: counterpartyId is deliberately omitted — it is the PII line in
         // this codebase and must never reach plain-text logs.
         return "EquityTrade[ref=%s, symbol=%s, qty=%s, price=%s %s, side=%s]"
-                .formatted(tradeRef, instrumentSymbol, quantity.toPlainString(),
+                .formatted(tradeRef(), instrumentSymbol, quantity.toPlainString(),
                         price.toPlainString(), currency.getCurrencyCode(), side);
     }
 
@@ -103,12 +92,19 @@ public final class EquityTrade implements TradeType {
         public Builder tradeDate(LocalDate v)         { this.tradeDate = v;       return this; }
         public Builder counterpartyId(long v)         { this.counterpartyId = v;  return this; }
 
+        /**
+         * Builds the immutable {@link EquityTrade}, validating that every required
+         * field is set and that all invariants hold.
+         *
+         * @return a fully-constructed, validated {@code EquityTrade} — never {@code null}
+         * @throws NullPointerException  if any required field ({@code tradeRef},
+         *                               {@code instrumentSymbol}, {@code quantity},
+         *                               {@code price}, {@code currency}, {@code side},
+         *                               {@code tradeDate}) was not set
+         * @throws IllegalStateException if {@code quantity} or {@code price} is not
+         *                               strictly positive
+         */
         public EquityTrade build() {
-            // TODO(TICKET-ADV019):
-            //   - Objects.requireNonNull each required field (tradeRef, instrumentSymbol,
-            //     quantity, price, currency, side, tradeDate).
-            //   - quantity and price must be > 0 (IllegalStateException otherwise).
-            //   - return new EquityTrade(this).
             Objects.requireNonNull(tradeRef, "tradeRef is required");
             Objects.requireNonNull(instrumentSymbol, "instrumentSymbol is required");
             Objects.requireNonNull(quantity, "quantity is required");

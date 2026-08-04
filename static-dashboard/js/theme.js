@@ -1,9 +1,8 @@
-// TICKET-ADV102 — theme toggle, persisted to localStorage; first paint reads
-// the persisted value to avoid a FOUC flash of the wrong theme.
+// TICKET-ADV100 — theme toggle click wiring. The initial theme read/set
+// (needed to avoid a FOUC flash) happens in an inline <script> in <head>,
+// before the stylesheet loads — see the inline snippet in each HTML page.
+// This file only wires the toggle button once the DOM is ready.
 (function () {
-  const stored = localStorage.getItem('reconx-theme') || 'light';
-  document.documentElement.dataset.theme = stored;
-
   document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('theme-toggle');
     btn && btn.addEventListener('click', () => {

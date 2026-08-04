@@ -46,7 +46,7 @@ public sealed interface TradeType
 
     Comparator<TradeType> NATURAL = Comparator
             .comparing(TradeType::tradeDate).reversed()
-            .thenComparing(TradeType::tradeRef, Comparator.comparing(TradeRef::value).reversed());
+            .thenComparing(t -> t.tradeRef().value());
 
     @Override
     default int compareTo(TradeType other) {

@@ -6,11 +6,15 @@ TICKET-ADV099 — Semantic HTML5 (header/nav/main/section/article/aside/footer)
 TICKET-ADV100 — ARIA roles + aria-live for the trade feed
 ============================================================================
 -->
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>ReconX (static) — Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- TICKET-ADV100 — set the theme before the stylesheet loads so there is no FOUC -->
+  <script>
+    document.documentElement.dataset.theme = localStorage.getItem('reconx-theme') || 'light';
+  </script>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -22,6 +26,7 @@ TICKET-ADV100 — ARIA roles + aria-live for the trade feed
       <a href="recon.html">Recon</a>
     </nav>
     <button id="theme-toggle" aria-label="Toggle light/dark theme">🌗</button>
+    <span id="sse-status" class="sse-status sse-status--connecting" role="status" aria-live="polite">Connecting…</span>
   </header>
 
   <aside class="layout__sidebar" role="complementary">
@@ -42,6 +47,7 @@ TICKET-ADV100 — ARIA roles + aria-live for the trade feed
         <article class="stat-card stat-card--warn"><h3>Open breaks</h3><p>15</p></article>
         <article class="stat-card"><h3>Notional</h3><p>$24.3M</p></article>
       </div>
+      <div class="alert alert--danger" role="alert">15 open breaks need review</div>
     </section>
 
     <section aria-labelledby="feed">

@@ -42,6 +42,15 @@ public class TradeMetrics {
     private final DistributionSummary tradeValue;
 
     public TradeMetrics(MeterRegistry registry, ReconBreakRepository breakRepo) {
+        // NOTE: Micrometer's Prometheus naming convention strips "created" as a
+        // reserved word from counter names (it collides with the OTLP/Prometheus
+        // convention for a companion "_created" timestamp series) — this counter
+        // is registered as "trade_created_total" but is actually exported to
+        // /actuator/prometheus as `trade_total` (verified: incrementing this
+        // counter N times produces `trade_total{...} N`, not
+        // `trade_created_total{...} N`). The ADV089 Grafana panel's PromQL
+        // targets `trade_total` for exactly this reason — update both together
+        // if this name ever changes.
         this.tradeCreated = Counter.builder("trade_created_total")
                 .description("Total trades created")
                 .register(registry);
@@ -59,10 +68,10 @@ public class TradeMetrics {
     }
 
     public void incrementTradeCreated() {
-        // TODO(TICKET-ADV083): increment the tradeCreated counter.
+        tradeCreated.increment();
     }
 
     public void recordTradeValue(double value) {
-        // TODO(TICKET-ADV086): record the value on the tradeValue distribution summary.
+        tradeValue.record(value);
     }
 }

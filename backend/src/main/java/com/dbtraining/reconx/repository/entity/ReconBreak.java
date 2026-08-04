@@ -1,6 +1,11 @@
 package com.dbtraining.reconx.repository.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.Instant;
 
 /**
@@ -18,6 +23,9 @@ public class ReconBreak {
     @Column(name = "trade_id", nullable = false)
     private Long tradeId;
 
+    @Column(name = "job_id", length = 36)
+    private String jobId;
+
     @Column(name = "discrepancy_type", nullable = false, length = 30)
     private String discrepancyType;
 
@@ -33,18 +41,27 @@ public class ReconBreak {
     @Column(name = "resolution_note", length = 500)
     private String resolutionNote;
 
+    /** HIGH/MEDIUM/LOW — computed once at detection time by ReconJobRunner. */
+    @Column(nullable = false, length = 10)
+    private String priority = "LOW";
+
     public ReconBreak() {}
 
     public Long getId()                { return id; }
     public Long getTradeId()           { return tradeId; }
+    public String getJobId()           { return jobId; }
     public String getDiscrepancyType() { return discrepancyType; }
     public String getStatus()          { return status; }
     public Instant getDetectedAt()     { return detectedAt; }
     public Instant getResolvedAt()     { return resolvedAt; }
     public String getResolutionNote()  { return resolutionNote; }
+    public String getPriority()        { return priority; }
 
     public void setTradeId(Long v)              { this.tradeId = v; }
+    public void setJobId(String v)              { this.jobId = v; }
     public void setDiscrepancyType(String v)    { this.discrepancyType = v; }
+    public void setDetectedAt(Instant v)        { this.detectedAt = v; }
+    public void setPriority(String v)           { this.priority = v; }
 
     public void resolve(String note) {
         this.status = "RESOLVED";
